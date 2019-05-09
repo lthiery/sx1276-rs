@@ -8,5 +8,15 @@ build = "build.rs"
 [build-dependencies]
 cbindgen = "0.1.29"
 
-[dependencies]
-embedded-hal = { version = "0.2.2" }
+[dependencies.stm32l0xx-hal]
+git                     = "https://github.com/lthiery/stm32l0xx-hal.git"
+branch					= "master"
+features                = ["stm32l0x2","rt"]
+
+[dependencies.stm32l0]
+version = "0.7.0"
+[features]
+rt = ["stm32l0/rt"]
+stm32l0x1 = ["stm32l0/stm32l0x1"]
+stm32l0x2 = ["stm32l0/stm32l0x2"]
+

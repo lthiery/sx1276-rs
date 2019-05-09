@@ -39,5 +39,3 @@ include = ["embedded-hal-bindings"]
 # A black list of crate names that are not allowed to be parsed
 exclude = ["libc"]
 
-
-

@@ -28,3 +28,5 @@ fn target_dir() -> PathBuf {
         PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("target")
     }
 }
+
+//fn main() {}
