@@ -8,7 +8,7 @@ use std::process::Command;
 fn main() {
     // build `libloragw`
     Command::new("make")
-        .args(&["-C", "radio/sx1276/sx1276"])
+        .args(&["-C", "radio/sx1276"])
         .status()
         .expect("sx1276 build failed");
 
@@ -28,16 +28,12 @@ fn main() {
     );
     println!("cargo:rustcpp-link-lib=static=sx1276");
 
-
-    /*
-    */
-
       // make the bindings
    let bindings = bindgen::Builder::default()
        .clang_arg("-I./conf")
+       .clang_arg("-I../embedded-hal-bindings/target")
+       .header("embedded-hal-bindings.h")
        .header("config.h")
-       .header("pinName-board.h")
-       .header("pinName-ioe.h")
        .header("system/gpio.h")
        .header("conf/spi-board.h")
        .header("system/spi.h")
