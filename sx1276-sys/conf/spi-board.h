@@ -15,16 +15,6 @@ Maintainer: Miguel Luis and Gregory Cristian
 #ifndef __SPI_MCU_H__
 #define __SPI_MCU_H__
 
-/*!
- * SPI driver structure definition
- */
-// struct Spi_s
-// {
-//     SPI_TypeDef Spi;
-//     Gpio_t Mosi;
-//     Gpio_t Miso;
-//     Gpio_t Sclk;
-//     Gpio_t Nss;
-// };
+//#include "embedded-hal-bindings.h"
 
 #endif  // __SPI_MCU_H__

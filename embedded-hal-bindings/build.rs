@@ -8,7 +8,7 @@ fn main() {
 
     let package_name = env::var("CARGO_PKG_NAME").unwrap();
     let output_file = target_dir()
-        .join(format!("{}.h", package_name))
+        .join("spi.h")
         .display()
         .to_string();
 
