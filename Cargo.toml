@@ -1,0 +1,6 @@
+[workspace]
+members = [
+"embedded-hal-bindings",
+"sx1276-sys",
+"sx1276"
+]

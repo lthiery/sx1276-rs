@@ -26,15 +26,11 @@ fn main() {
         "cargo:rustc-link-search=native={}",
         conf_path.to_str().unwrap()
     );
-    //println!("cargo:rustc-link-lib=static=sx1276");
 
-   /// make the bindings
+   // make the bindings
    let bindings = bindgen::Builder::default()
-       .clang_arg("-I./conf")
        .clang_arg("-I../embedded-hal-bindings/target")
-       .header("spi.h")
-       .header("config.h")
-       .header("system/gpio.h")
+       .header("embedded-rust-bindings.h")
        .header("radio/radio.h")
        .header("radio/sx1276/sx1276.h")
        .whitelist_var("XTAL_FREQ")

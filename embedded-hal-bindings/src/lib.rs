@@ -37,3 +37,48 @@ pub extern "C" fn SpiFormat(s: &mut Spi_t, bits: u8, cpol: u8, cpha: u8, slave: 
 pub extern "C" fn SpiFrequency(s: &mut Spi_t, hz: u8){}
 #[no_mangle]
 pub extern "C" fn SpiInOut(s: &mut Spi_t, outData: u16){}
+
+#[repr(C)]
+#[no_mangle]
+pub struct gpio_handle
+{	
+	gpio:  *mut std::ffi::c_void,
+}
+
+type Gpio_t = spi_handle;
+
+pub enum PinNames
+{
+    MCU_PINS,
+    IOE_PINS,
+    NC = 0xFFFFFFFF
+}
+
+pub enum PinModes
+{
+    PIN_INPUT = 0,
+    PIN_OUTPUT,
+    PIN_ALTERNATE_FCT,
+    PIN_ANALOGIC
+}
+
+pub enum PinTypes
+{
+    PIN_NO_PULL = 0,
+    PIN_PULL_UP,
+    PIN_PULL_DOWN
+}
+
+pub enum PinConfigs
+{
+    PIN_PUSH_PULL = 0,
+    PIN_OPEN_DRAIN
+}
+
+
+
+#[no_mangle]
+pub extern "C" fn GpioInit(obj: &mut Gpio_t, pin: PinNames, mode: PinModes, config: PinConfigs, pin_type: PinTypes, val: u32){
+
+}
+
