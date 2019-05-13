@@ -2,50 +2,34 @@ use stm32l0xx_hal as hal;
 use stm32l0xx_hal::pac::SPI1;
 use stm32l0xx_hal::gpio::gpioa::{PA6, PA7};
 use stm32l0xx_hal::gpio::gpiob::PB3;
-use stm32l0xx_hal::gpio::{Floating, Input};
+use stm32l0xx_hal::gpio::{Floating, Input, PushPull, Output};
 
-use embedded_hal::blocking::spi::Write;
+//use embedded_hal::blocking::spi::Write;
+use embedded_hal::spi::FullDuplex;
+use embedded_hal::digital::v1::OutputPin;
 
-#[repr(C)]
+use nb::block;
+
+type Spi_t = *mut std::ffi::c_void;
+
+
 #[no_mangle]
-pub struct spi_handle
-{	
-	spi:  *mut std::ffi::c_void,
-}
+pub extern "C" fn SpiInOut(s: Spi_t, outData: u16){
 
-type Spi_t = spi_handle;
-
-// #[repr(C)]
-// #[no_mangle]
-// pub struct pin_handle
-// {	
-// 	name: u8,
-// }
-
-// #[no_mangle]
-// pub extern "C" fn SpiInit(s: &mut Spi_s, _mosi: PinNames, _miso: PinNames, _sclk: PinNames, _nss: PinNames) {
-// 	let spi: &mut hal::spi::Spi<SPI1, (PB3<Input<Floating>>, PA6<Input<Floating>>, PA7<Input<Floating>>)> = 
-// 		unsafe { &mut *(s.spi as *mut hal::spi::Spi<SPI1, (PB3<Input<Floating>>, PA6<Input<Floating>>, PA7<Input<Floating>>)>) };
+	let spi: &mut hal::spi::Spi<SPI1, (PB3<Input<Floating>>, PA6<Input<Floating>>, PA7<Input<Floating>>)> = 
+		unsafe { &mut *(s as *mut hal::spi::Spi<SPI1, (PB3<Input<Floating>>, PA6<Input<Floating>>, PA7<Input<Floating>>)>) };
     
-//     spi.write(&[0, 1]).unwrap();
-// }
-#[no_mangle]
-pub extern "C" fn SpiDeInit(s: &mut Spi_t){}
-#[no_mangle]
-pub extern "C" fn SpiFormat(s: &mut Spi_t, bits: u8, cpol: u8, cpha: u8, slave: u8){}
-#[no_mangle]
-pub extern "C" fn SpiFrequency(s: &mut Spi_t, hz: u8){}
-#[no_mangle]
-pub extern "C" fn SpiInOut(s: &mut Spi_t, outData: u16){}
+	let mut inData: u16;
 
-#[repr(C)]
-#[no_mangle]
-pub struct gpio_handle
-{	
-	gpio:  *mut std::ffi::c_void,
+    spi.send( (outData>>8) as u8).unwrap();
+    inData = (block!(spi.read()).unwrap() as u16) << 8;
+
+    spi.send(outData as u8).unwrap();
+    inData |= block!(spi.read()).unwrap() as u16;
+
 }
 
-type Gpio_t = spi_handle;
+type Gpio_t = *mut std::ffi::c_void;
 
 pub enum PinNames
 {
@@ -76,9 +60,20 @@ pub enum PinConfigs
 }
 
 
-
 #[no_mangle]
-pub extern "C" fn GpioInit(obj: &mut Gpio_t, pin: PinNames, mode: PinModes, config: PinConfigs, pin_type: PinTypes, val: u32){
+pub extern "C" fn GpioInit(obj: Gpio_t, pin: PinNames, mode: PinModes, config: PinConfigs, pin_type: PinTypes, val: u32){
 
 }
 
+#[no_mangle]
+pub extern "C" fn GpioWrite(obj: Gpio_t, val: u8){
+	let gpio: &mut stm32l0xx_hal::gpio::gpioa::PA15<Output<PushPull>> = 
+		unsafe { &mut *(obj as *mut stm32l0xx_hal::gpio::gpioa::PA15<Output<PushPull>>) };
+
+	if (val == 0) {
+		gpio.set_low();
+	} else {
+		gpio.set_high();
+	}
+
+}

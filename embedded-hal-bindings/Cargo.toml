@@ -10,6 +10,7 @@ cbindgen = "0.1.29"
 
 [dependencies]
 embedded-hal = { version = "0.2.2", features = ["unproven"] }
+nb = "0.1.2"
 
 [dependencies.stm32l0xx-hal]
 git                     = "https://github.com/lthiery/stm32l0xx-hal.git"
