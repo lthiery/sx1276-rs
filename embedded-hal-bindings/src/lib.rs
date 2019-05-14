@@ -1,3 +1,5 @@
+#![no_std]
+
 use stm32l0xx_hal as hal;
 use stm32l0xx_hal::pac::SPI1;
 use stm32l0xx_hal::gpio::gpioa::{PA6, PA7};
@@ -10,7 +12,7 @@ use embedded_hal::digital::v1::OutputPin;
 
 use nb::block;
 
-type Spi_t = *mut std::ffi::c_void;
+type Spi_t = *mut usize;
 
 
 #[no_mangle]
@@ -29,13 +31,12 @@ pub extern "C" fn SpiInOut(s: Spi_t, outData: u16){
 
 }
 
-type Gpio_t = *mut std::ffi::c_void;
+type Gpio_t = *mut usize;
 
 pub enum PinNames
 {
     MCU_PINS,
     IOE_PINS,
-    NC = 0xFFFFFFFF
 }
 
 pub enum PinModes

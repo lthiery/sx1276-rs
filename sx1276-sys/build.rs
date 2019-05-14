@@ -63,6 +63,8 @@ fn main() {
        .rustfmt_bindings(true)
        .derive_copy(false)
        .layout_tests(false)
+       .clang_args(&["-I", "~/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/thumbv6m-none-eabi/lib"])
+       .rustfmt_bindings(false)
        .generate()
        .expect("Failed to generate sx1276 bindings!");
 

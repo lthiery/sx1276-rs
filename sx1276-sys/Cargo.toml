@@ -10,3 +10,4 @@ bindgen = "0.49.0"
 
 [dependencies]
 embedded-hal-bindings = {path = "../embedded-hal-bindings"}
+

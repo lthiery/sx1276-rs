@@ -1,3 +1,5 @@
+#![no_std]
+
 use sx1276_sys;
 
 #[no_mangle]
