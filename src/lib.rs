@@ -51,7 +51,7 @@ impl<SPI, NSS> Sx1276<SPI, NSS>{
 		}
 	}
 
-	pub fn read(addr: u8) -> u8 {
+	pub fn read(&self, addr: u8) -> u8 {
 		unsafe {
 			sx1276_sys::SX1276Read(addr)
 		}
