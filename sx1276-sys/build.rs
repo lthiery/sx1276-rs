@@ -1,5 +1,4 @@
 use bindgen;
-use bindgen::builder;
 use std::env;
 use std::path::PathBuf;
 use std::process::Command;
@@ -29,6 +28,10 @@ fn main() {
 
    // make the bindings
    let bindings = bindgen::Builder::default()
+       .raw_line("#![no_std]")
+       .raw_line("use libc;")
+       .use_core()
+       .ctypes_prefix("libc")
        .clang_arg("-I../embedded-hal-bindings/target")
        .header("embedded-rust-bindings.h")
        .header("radio/radio.h")
@@ -59,12 +62,11 @@ fn main() {
        .whitelist_function("SX1276WriteBuffer")
        .whitelist_function("SX1276ReadBuffer")
        .whitelist_function("SX1276SetMaxPayloadLength")
-       .trust_clang_mangling(false)
-       .rustfmt_bindings(true)
-       .derive_copy(false)
-       .layout_tests(false)
-       .clang_args(&["-I", "~/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/thumbv6m-none-eabi/lib"])
-       .rustfmt_bindings(false)
+       //.trust_clang_mangling(false)
+       //.rustfmt_bindings(true)
+       //.derive_copy(false)
+       //.layout_tests(false)
+       //.rustfmt_bindings(false)
        .generate()
        .expect("Failed to generate sx1276 bindings!");
 
