@@ -9,6 +9,6 @@ build = "build.rs"
 bindgen = "0.49.0"
 
 [dependencies]
-libc =  { version = "0.2", default-features = false }
+cty =  "0.2"
 embedded-hal-bindings = {path = "../embedded-hal-bindings"}
 

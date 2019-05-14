@@ -28,10 +28,10 @@ fn main() {
 
    // make the bindings
    let bindings = bindgen::Builder::default()
-       .raw_line("#![no_std]")
-       .raw_line("use libc;")
+       //.raw_line("#![no_std]")
+       .raw_line("use cty;")
        .use_core()
-       .ctypes_prefix("libc")
+       .ctypes_prefix("cty")
        .clang_arg("-I../embedded-hal-bindings/target")
        .header("embedded-rust-bindings.h")
        .header("radio/radio.h")
