@@ -1,7 +1,5 @@
 use sx1276_sys;
 
-pub struct Sx1276;
-
 #[no_mangle]
 pub extern "C" fn tx_done() {
 
@@ -37,11 +35,23 @@ pub extern "C" fn cad_done(channel_activity_detected: bool) {
 	
 }
 
+pub struct Sx1276<SPI, NSS>{
+	spi: SPI,
+	nss: NSS
+}
 
-impl Sx1276 {
-	pub fn read(addr: u8) {
+
+impl<SPI, NSS> Sx1276<SPI, NSS>{
+	pub fn new(spi: SPI, nss: NSS) -> Sx1276<SPI, NSS>{
+		Sx1276 {
+			spi,
+			nss
+		}
+	}
+
+	pub fn read(addr: u8) -> u8 {
 		unsafe {
-			sx1276_sys::SX1276Read(addr);
+			sx1276_sys::SX1276Read(addr)
 		}
 	}
 

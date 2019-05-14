@@ -1,8 +1,0 @@
-[package]
-name = "sx1276"
-version = "0.1.0"
-authors = ["Louis Thiery <louis@helium.com>"]
-edition = "2018"
-
-[dependencies]
-sx1276-sys = {path = "../sx1276-sys"}
