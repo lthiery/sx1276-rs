@@ -13,12 +13,12 @@ use embedded_hal::spi::FullDuplex;
 use core::ffi; 
 use nb::block;
 
-// #[repr(C)]
-// pub struct Spi_s<'a> {
-//     s: &'a core::ffi::c_void,
-// }
+#[repr(C)]
+pub struct Spi_s {
+    s: *mut ffi::c_void,
+}
 
-type Spi_t = *mut ffi::c_void;
+type Spi_t = Spi_s;//
 
 #[no_mangle]
 pub extern "C" fn SpiInOut(s: Spi_t, outData: u16) {
@@ -35,7 +35,7 @@ pub extern "C" fn SpiInOut(s: Spi_t, outData: u16) {
             PA7<Input<Floating>>,
         ),
     > = unsafe {
-        &mut *(s as *mut hal::spi::Spi<
+        &mut *(s.s as *mut hal::spi::Spi<
             SPI1,
             (
                 PB3<Input<Floating>>,
@@ -56,11 +56,13 @@ pub extern "C" fn SpiInOut(s: Spi_t, outData: u16) {
 
 type Gpio_t = *mut u32;
 
+#[repr(C)]
 pub enum PinNames {
     MCU_PINS,
     IOE_PINS,
 }
 
+#[repr(C)]
 pub enum PinModes {
     PIN_INPUT = 0,
     PIN_OUTPUT,
@@ -68,12 +70,14 @@ pub enum PinModes {
     PIN_ANALOGIC,
 }
 
+#[repr(C)]
 pub enum PinTypes {
     PIN_NO_PULL = 0,
     PIN_PULL_UP,
     PIN_PULL_DOWN,
 }
 
+#[repr(C)]
 pub enum PinConfigs {
     PIN_PUSH_PULL = 0,
     PIN_OPEN_DRAIN,
