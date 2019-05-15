@@ -17,4 +17,6 @@
     { MODEM_FSK , REG_DIOMAPPING2        , 0x30 },\
     { MODEM_LORA, REG_LR_DETECTOPTIMIZE  , 0x43 },\
     { MODEM_LORA, REG_LR_PAYLOADMAXLENGTH, 0x40 },\
-}                                                 \
+}                                                 
+
+#define RF_MID_BAND_THRESH                          525000000

@@ -13,15 +13,29 @@ use embedded_hal::spi::FullDuplex;
 use core::ffi; 
 use nb::block;
 
+
 #[repr(C)]
-pub struct Spi_s {
-    s: *mut ffi::c_void,
+pub struct SpiInstance {
+    Instance:*mut ffi::c_void,
+    //Reset: &Gpio_t,
 }
 
-type Spi_t = Spi_s;//
+#[repr(C)]
+pub struct Spi_s {
+    Spi: SpiInstance,
+    Nss: Gpio_t,
+}
+
+pub type Spi_t = Spi_s;//
+
+
+//find more elegant way to make cbindgen export Spi_t
+#[no_mangle]
+pub extern "C" fn foo(s: Spi_t) {
+}
 
 #[no_mangle]
-pub extern "C" fn SpiInOut(s: Spi_t, outData: u16) {
+pub extern "C" fn SpiInOut(s: &mut Spi_t, outData: u16) -> u16{
 
     //let data: &mut State = unsafe { &mut *(data as *mut State) };
     //let data: &mut State = unsafe { &mut *(data as *mut State) };
@@ -35,7 +49,7 @@ pub extern "C" fn SpiInOut(s: Spi_t, outData: u16) {
             PA7<Input<Floating>>,
         ),
     > = unsafe {
-        &mut *(s.s as *mut hal::spi::Spi<
+        &mut *(s.Spi.Instance as *mut hal::spi::Spi<
             SPI1,
             (
                 PB3<Input<Floating>>,
@@ -52,14 +66,17 @@ pub extern "C" fn SpiInOut(s: Spi_t, outData: u16) {
 
     spi.send(outData as u8).unwrap();
     inData |= block!(spi.read()).unwrap() as u16;
+
+    inData
 }
 
-type Gpio_t = *mut u32;
+type Gpio_t = *mut usize;
 
 #[repr(C)]
 pub enum PinNames {
     MCU_PINS,
     IOE_PINS,
+    RADIO_RESET,
 }
 
 #[repr(C)]
@@ -85,7 +102,7 @@ pub enum PinConfigs {
 
 #[no_mangle]
 pub extern "C" fn GpioInit(
-    obj: Gpio_t,
+    obj: &Gpio_t,
     pin: PinNames,
     mode: PinModes,
     config: PinConfigs,
@@ -143,3 +160,27 @@ pub extern "C" fn TimerGetFutureTime(event_in_future: &TimerEvent_t) {}
 
 #[no_mangle]
 pub extern "C" fn TimerLowPowerHandler() {}
+
+type irq_ptr = extern "C" fn();
+
+
+#[no_mangle]
+pub extern "C" fn SX1276IoIrqInit(irq_handlers: [irq_ptr; 6]) {}
+
+#[no_mangle]
+pub extern "C" fn SX1276GetPaSelect(channel: u32) -> u8 {0}
+
+#[no_mangle]
+pub extern "C" fn DelayMs(ms: u32){}
+
+#[no_mangle]
+pub extern "C" fn memcpy1(dst: &u8, src: &u8, size: u16){}
+
+#[no_mangle]
+pub extern "C" fn SX1276SetAntSwLowPower(status: bool){}
+
+#[no_mangle]
+pub extern "C" fn SX1276SetAntSw(rxTx: u8){}
+
+#[no_mangle]
+pub extern "C" fn assert_param(expr: bool){}
