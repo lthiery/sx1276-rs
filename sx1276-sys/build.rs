@@ -1,3 +1,6 @@
+#![feature(rustc_private)]
+extern crate cc;
+
 use bindgen;
 use std::env;
 use std::path::PathBuf;
@@ -28,12 +31,11 @@ fn main() {
 
    // make the bindings
    let bindings = bindgen::Builder::default()
-       //.raw_line("#![no_std]")
        .raw_line("use cty;")
        .use_core()
        .ctypes_prefix("cty")
        .clang_arg("-I../embedded-hal-bindings/target")
-       .header("embedded-rust-bindings.h")
+       .header("board.h")
        .header("radio/radio.h")
        .header("radio/sx1276/sx1276.h")
        .whitelist_var("XTAL_FREQ")
@@ -74,4 +76,11 @@ fn main() {
     bindings
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
+
+
+    cc::Build::new()
+        .include("../embedded-hal-bindings/target")
+        .include("radio")
+        .file("radio/sx1276/sx1276.c")
+        .compile("sx1276");
 }
