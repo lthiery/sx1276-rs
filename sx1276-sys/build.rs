@@ -20,6 +20,8 @@ fn main() {
     let conf_path =
         PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("conf");
 
+
+
     println!(
         "cargo:rustc-link-search=native={}",
         radio_path.to_str().unwrap()
@@ -28,6 +30,15 @@ fn main() {
         "cargo:rustc-link-search=native={}",
         conf_path.to_str().unwrap()
     );
+
+    // let embedded_hal_path =
+    // PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("../embedded-hal-bindings/target");
+
+    // // println!(
+    // //     "cargo:rustc-link-lib=static={}",
+    // //     embedded_hal_path.to_str().unwrap()
+    // // );
+
 
    // make the bindings
    let bindings = bindgen::Builder::default()
@@ -79,8 +90,11 @@ fn main() {
 
 
     cc::Build::new()
+        .pic(false)
         .include("../embedded-hal-bindings/target")
         .include("radio")
         .file("radio/sx1276/sx1276.c")
         .compile("sx1276");
+
+
 }
