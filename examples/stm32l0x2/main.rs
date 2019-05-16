@@ -35,6 +35,9 @@ use stm32l0xx_hal::{pac, prelude::*, rcc::Config, serial, spi};
 #define BOARD_TCXO_WAKEUP_TIME               5
 */
 
+
+
+
 #[entry]
 fn main() -> ! {
     let dp = pac::Peripherals::take().unwrap();
@@ -55,7 +58,7 @@ fn main() -> ! {
     let (mut tx, _rx) = serial.split();
 
     write!(tx, "Hello, world!\r\n").unwrap();
-/*
+    /*
     let sck = gpioa.pa5;
     let miso = gpioa.pa11;
     let mosi = gpioa.pa12;
@@ -68,8 +71,6 @@ fn main() -> ! {
     let mosi = gpioa.pa7;
     let nss = gpioa.pa15.into_push_pull_output();
     
-
-
     // Initialise the SPI peripheral.
     let spi = dp
         .SPI1
@@ -81,8 +82,10 @@ fn main() -> ! {
     write!(tx, "{} reg x{:x}\r\n",0x07, radio.read(0x07)).unwrap();
     write!(tx, "{} reg x{:x}\r\n",0x06, radio.read(0x06)).unwrap();
 
+    // radio.set_channel(911_000_000 - 400_000);
+    // radio.set_tx_config();
     loop {
-
+        //radio.boop();
     }
 }
 
@@ -103,7 +106,6 @@ use nb::block;
 #[repr(C)]
 pub struct SpiInstance {
     Instance:*mut ffi::c_void,
-    //Reset: &Gpio_t,
 }
 
 #[repr(C)]
@@ -123,8 +125,7 @@ pub extern "C" fn foo(s: Spi_t) {
 #[no_mangle]
 pub extern "C" fn SpiInOut(s: &mut Spi_t, outData: u16) -> u16 {
 
-    let spi: &mut hal::spi::Spi<
-        SPI1,
+    let spi: &mut hal::spi::Spi<SPI1,
         (
             PA3<Input<Floating>>,
             PA6<Input<Floating>>,
