@@ -34,7 +34,7 @@ typedef enum
     RX_ERROR,
     TX,
     TX_TIMEOUT,
-} weStates_t;
+} States_t;
 
 #define RX_TIMEOUT_VALUE                            1000
 #define BUFFER_SIZE                                 64 // Define the payload size here
@@ -83,8 +83,9 @@ void OnRxError( void );
 /**
  * Main application entry point.
  */
-int helium_init(void)
+int helium_loop(void)
 {
+    bool isMaster = true;
     uint8_t i;
 
     // Radio initialization
@@ -107,20 +108,24 @@ int helium_init(void)
                                    LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
                                    LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
                                    0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
-}
+    
+    //SX1276Rx( RX_TIMEOUT_VALUE );
 
-int helium_transmit(uint8_t *payload, uint16_t size){
-	// Send the next PING frame            
-	Buffer[0] = 'P';
-	Buffer[1] = 'I';
-	Buffer[2] = 'N';
-	Buffer[3] = 'G';
-	// We fill the buffer with numbers for the payload 
-	for( i = 4; i < BufferSize; i++ )
-	{
-	    Buffer[i] = i - 4;
-	}
-	SX1276Send(Buffer, BufferSize);	
+  	
+  	while(true){
+  		// Send the next PING frame            
+        Buffer[0] = 'P';
+        Buffer[1] = 'I';
+        Buffer[2] = 'N';
+        Buffer[3] = 'G';
+        // We fill the buffer with numbers for the payload 
+        for( i = 4; i < BufferSize; i++ )
+        {
+            Buffer[i] = i - 4;
+        }
+        DelayMs(1); 
+        SX1276Send( Buffer, BufferSize );
+  	}
 }
 
 void OnTxDone( void )
