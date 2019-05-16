@@ -75,14 +75,14 @@ fn main() -> ! {
         .SPI1
         .spi((sck, miso, mosi), spi::MODE_0, 100_000.hz(), &mut rcc);
 
-    let radio = sx1276::Sx1276::new(spi, nss);
+    //let radio = sx1276::Sx1276::new(spi, nss);
 
-    write!(tx, "{} reg x{:x}\r\n",0x06, radio.read(0x06)).unwrap();
-    write!(tx, "{} reg x{:x}\r\n",0x07, radio.read(0x07)).unwrap();
-    write!(tx, "{} reg x{:x}\r\n",0x06, radio.read(0x06)).unwrap();
+    // write!(tx, "{} reg x{:x}\r\n",0x06, radio.read(0x06)).unwrap();
+    // write!(tx, "{} reg x{:x}\r\n",0x07, radio.read(0x07)).unwrap();
+    // write!(tx, "{} reg x{:x}\r\n",0x06, radio.read(0x06)).unwrap();
 
     loop {
-
+        sx1276::Sx1276::helium_loop();
     }
 }
 
@@ -100,13 +100,13 @@ use core::ffi;
 use nb::block;
 
 
-#[repr(C)]
+#[repr(C, align(4))]
 pub struct SpiInstance {
     Instance:*mut ffi::c_void,
     //Reset: &Gpio_t,
 }
 
-#[repr(C)]
+#[repr(C, align(4))]
 pub struct Spi_s {
     Spi: SpiInstance,
     Nss: Gpio_t,
@@ -226,7 +226,7 @@ pub extern "C" fn GpioWrite(obj: Gpio_t, val: u8) {
     }
 }
 
-#[repr(C)]
+#[repr(C, align(4))]
 pub struct TimerEvent_s {
     IsRunning: bool,
 }

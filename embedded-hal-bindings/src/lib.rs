@@ -13,7 +13,6 @@ use embedded_hal::spi::FullDuplex;
 use core::ffi; 
 use nb::block;
 
-
 #[repr(C)]
 pub struct SpiInstance {
     Instance:*mut ffi::c_void,

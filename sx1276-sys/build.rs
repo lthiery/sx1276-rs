@@ -47,6 +47,7 @@ fn main() {
        .ctypes_prefix("cty")
        .clang_arg("-I../embedded-hal-bindings/target")
        .header("board.h")
+       .header("helium.h")
        .header("radio/radio.h")
        .header("radio/sx1276/sx1276.h")
        .whitelist_var("XTAL_FREQ")
@@ -55,6 +56,7 @@ fn main() {
        .whitelist_type("RadioEvents_t")
        .whitelist_type("RadioState_t")
        .whitelist_type("RadioModems_t")
+       .whitelist_function("helium_loop")
        .whitelist_function("SX1276Init")
        .whitelist_function("SX1276GetStatus")
        .whitelist_function("SX1276SetModem")
@@ -93,6 +95,7 @@ fn main() {
         .pic(false)
         .include("../embedded-hal-bindings/target")
         .include("radio")
+        .file("helium.c")
         .file("radio/sx1276/sx1276.c")
         .compile("sx1276");
 

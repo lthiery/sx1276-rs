@@ -36,18 +36,21 @@ pub extern "C" fn cad_done(channel_activity_detected: bool) {
 	
 }
 
-pub struct Sx1276<SPI, NSS>{
-	spi: SPI,
-	nss: NSS
-}
+pub struct Sx1276;
 
+impl Sx1276{
+	// pub fn new(spi: SPI, nss: NSS) -> Sx1276<SPI, NSS>{
+	// 	Sx1276 {
+	// 		spi,
+	// 		nss
+	// 	}
+	// }
 
-impl<SPI, NSS> Sx1276<SPI, NSS>{
-	pub fn new(spi: SPI, nss: NSS) -> Sx1276<SPI, NSS>{
-		Sx1276 {
-			spi,
-			nss
+	pub fn helium_loop(){
+		unsafe {
+			sx1276_sys::helium_loop();
 		}
+
 	}
 
 	pub fn read(&self, addr: u8) -> u8 {
