@@ -199,6 +199,7 @@ pub enum PinConfigs {
     PIN_OPEN_DRAIN,
 }
 
+
 #[no_mangle]
 pub extern "C" fn GpioInit(
     obj: &Gpio_t,
@@ -265,7 +266,6 @@ pub extern "C" fn TimerLowPowerHandler() {}
 
 type irq_ptr = extern "C" fn();
 
-
 #[no_mangle]
 pub extern "C" fn SX1276IoIrqInit(irq_handlers: [irq_ptr; 6]) {}
 
@@ -273,7 +273,10 @@ pub extern "C" fn SX1276IoIrqInit(irq_handlers: [irq_ptr; 6]) {}
 pub extern "C" fn SX1276GetPaSelect(channel: u32) -> u8 {0}
 
 #[no_mangle]
-pub extern "C" fn DelayMs(ms: u32){}
+pub extern "C" fn DelayMs(ms: u32){
+
+    
+}
 
 #[no_mangle]
 pub extern "C" fn memcpy1(dst: &u8, src: &u8, size: u16){}
