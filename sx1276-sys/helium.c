@@ -9,7 +9,7 @@
 #include <stdbool.h>
 
 
-#define RF_FREQUENCY                                910600000 // Hz //911_000_000 - 400_000
+#define RF_FREQUENCY                                90250000 // Hz //911_000_000 - 400_000
 #define TX_OUTPUT_POWER                             14        // dBm
 
 #define LORA_BANDWIDTH                              0         // [0: 125 kHz,

@@ -238,9 +238,6 @@ type TimerEvent_t = TimerEvent_s;
 pub extern "C" fn TimerInit(obj: &TimerEvent_t, cb: Option<extern "C" fn()>) {}
 
 #[no_mangle]
-pub extern "C" fn TimerIrqHandler() {}
-
-#[no_mangle]
 pub extern "C" fn TimerStart(obj: &TimerEvent_t) {}
 
 #[no_mangle]
