@@ -1,14 +1,14 @@
 #![no_std]
 #![allow(non_snake_case)]
+#![allow(non_camel_case_types)] 
+#![allow(unused_variables)]
 
 use stm32l0xx_hal as hal;
 use stm32l0xx_hal::gpio::gpioa::{PA6, PA7};
 use stm32l0xx_hal::gpio::gpiob::PB3;
-use stm32l0xx_hal::gpio::{Floating, Input, Output, PushPull};
+use stm32l0xx_hal::gpio::{Floating, Input};
 use stm32l0xx_hal::pac::SPI1;
 
-//use embedded_hal::blocking::spi::Write;
-use embedded_hal::digital::v1::OutputPin;
 use embedded_hal::spi::FullDuplex;
 use core::ffi; 
 use nb::block;
