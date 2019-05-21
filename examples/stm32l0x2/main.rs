@@ -1,15 +1,6 @@
-#![no_main]
 #![no_std]
+#![no_main]
 #![feature(lang_items)]
-
-// panic handler
-extern crate panic_semihosting;
-
-use core::fmt::Write;
-use cortex_m_rt::entry;
-use sx1276;
-
-use stm32l0xx_hal::{pac, prelude::*, rcc::Config, serial, spi};
 
 //use nb::block;
 
@@ -35,66 +26,106 @@ use stm32l0xx_hal::{pac, prelude::*, rcc::Config, serial, spi};
 #define BOARD_TCXO_WAKEUP_TIME               5
 */
 
-#[entry]
-fn main() -> ! {
-    let dp = pac::Peripherals::take().unwrap();
+// panic handler
+extern crate panic_semihosting;
 
-    // Configure the clock.
-    let mut rcc = dp.RCC.freeze(Config::hsi16());
-
-    let gpioa = dp.GPIOA.split(&mut rcc);
-
-    let tx_pin = gpioa.pa9;
-    let rx_pin = gpioa.pa10;
-
-    let serial = dp
-        .USART1
-        .usart((tx_pin, rx_pin), serial::Config::default(), &mut rcc)
-        .unwrap();
-
-    let (mut tx, _rx) = serial.split();
-
-    write!(tx, "Hello, world!\r\n").unwrap();
-/*
-    let sck = gpioa.pa5;
-    let miso = gpioa.pa11;
-    let mosi = gpioa.pa12;
-    let nss = gpioa.pa2.into_push_pull_output();
-    */
-
-    let gpiob = dp.GPIOB.split(&mut rcc);
-    let sck = gpiob.pb3;
-    let miso = gpioa.pa6;
-    let mosi = gpioa.pa7;
-    let nss = gpioa.pa15.into_push_pull_output();
-    
-
-
-    // Initialise the SPI peripheral.
-    let spi = dp
-        .SPI1
-        .spi((sck, miso, mosi), spi::MODE_0, 100_000.hz(), &mut rcc);
-
-    //let radio = sx1276::Sx1276::new(spi, nss);
-
-    // write!(tx, "{} reg x{:x}\r\n",0x06, radio.read(0x06)).unwrap();
-    // write!(tx, "{} reg x{:x}\r\n",0x07, radio.read(0x07)).unwrap();
-    // write!(tx, "{} reg x{:x}\r\n",0x06, radio.read(0x06)).unwrap();
-
-    loop {
-        sx1276::Sx1276::helium_loop();
-    }
-}
-
-
+use core::fmt::Write;
+use cortex_m_rt::entry;
+use sx1276;
 use stm32l0xx_hal as hal;
+use hal::{exti::TriggerEdge, gpio::*, pac, prelude::*, rcc::Config, serial, spi};
+use embedded_hal::digital::v2::OutputPin;
+
+#[rtfm::app(device = stm32l0xx_hal::pac)]
+const APP: () = {
+    static mut LED: gpiob::PB5<Output<PushPull>> = ();
+    static mut INT: pac::EXTI = ();
+    static mut BUTTON: gpiob::PB2<Input<PullUp>> = ();
+
+    #[init]
+    fn init() -> init::LateResources {
+
+        let dp = pac::Peripherals::take().unwrap();
+
+        // Configure the clock.
+        let mut rcc = dp.RCC.freeze(Config::hsi16());
+
+        let gpioa = dp.GPIOA.split(&mut rcc);
+
+        let tx_pin = gpioa.pa9;
+        let rx_pin = gpioa.pa10;
+
+        let serial = dp
+            .USART1
+            .usart((tx_pin, rx_pin), serial::Config::default(), &mut rcc)
+            .unwrap();
+
+        let gpiob = dp.GPIOB.split(&mut rcc);
+        let sck = gpiob.pb3;
+        let miso = gpioa.pa6;
+        let mosi = gpioa.pa7;
+        let nss = gpioa.pa15.into_push_pull_output();
+
+        // Initialise the SPI peripheral.
+        let spi = dp
+            .SPI1
+            .spi((sck, miso, mosi), spi::MODE_0, 100_000.hz(), &mut rcc);
+
+        // Acquire the GPIOB peripheral. This also enables the clock for GPIOB in
+        // the RCC register.
+        let gpiob = device.GPIOB.split(&mut rcc);
+
+        // Configure PB5 as output.
+        let led = gpiob.pb5.into_push_pull_output();
+
+        // Configure PB2 as input.
+        let button = gpiob.pb2.into_pull_up_input();
+
+        let exti = device.EXTI;
+        // Configure the external interrupt on the falling edge for the pin 2.
+        exti.listen(
+            &mut rcc,
+            &mut device.SYSCFG_COMP,
+            button.port,
+            button.i,
+            TriggerEdge::Falling,
+        );
+
+        // Return the initialised resources.
+        init::LateResources {
+            LED: led,
+            INT: exti,
+            BUTTON: button,
+        }
+
+    }
+
+    #[idle]
+    fn idle() -> !{
+        loop {}
+    }
+
+    #[interrupt(resources = [LED, INT, BUTTON])]
+    fn EXTI2_3() {
+        static mut STATE: bool = false;
+        // Clear the interrupt flag.
+        resources.INT.clear_irq(resources.BUTTON.i);
+        if *STATE {
+            embedded_hal::digital::v2::OutputPin::set_low(LED).unwrap();
+            *STATE = false;
+        } else {
+            embedded_hal::digital::v2::OutputPin::set_high(LED).unwrap();
+           *STATE = true;
+        }
+    }
+
+};
+
 use stm32l0xx_hal::gpio::gpioa::*;
 use stm32l0xx_hal::gpio::gpiob::*;
-use stm32l0xx_hal::gpio::{Floating, Input, Output, PushPull};
+use stm32l0xx_hal::gpio::{Floating, Input, PushPull};
 use stm32l0xx_hal::pac::SPI1;
 
-//use embedded_hal::blocking::spi::Write;
-use embedded_hal::digital::v1::OutputPin;
 use embedded_hal::spi::FullDuplex;
 use core::ffi; 
 use nb::block;
@@ -221,9 +252,9 @@ pub extern "C" fn GpioWrite(obj: Gpio_t, val: u8) {
 
 
     if (val == 0) {
-        gpio.set_low();
+        embedded_hal::digital::v2::OutputPin::set_low(gpio).unwrap();
     } else {
-        gpio.set_high();
+        embedded_hal::digital::v2::OutputPin::set_high(gpio).unwrap();
     }
 }
 

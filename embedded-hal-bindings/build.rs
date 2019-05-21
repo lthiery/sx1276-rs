@@ -5,8 +5,6 @@ use std::path::PathBuf;
 
 fn main() {
     let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-
-    let package_name = env::var("CARGO_PKG_NAME").unwrap();
     let output_file = target_dir().join("board.h").display().to_string();
 
     cbindgen::generate(&crate_dir)

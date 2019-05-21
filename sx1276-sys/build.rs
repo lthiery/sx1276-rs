@@ -20,8 +20,6 @@ fn main() {
     let conf_path =
         PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("conf");
 
-
-
     println!(
         "cargo:rustc-link-search=native={}",
         radio_path.to_str().unwrap()
