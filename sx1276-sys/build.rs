@@ -6,7 +6,6 @@ use std::env;
 use std::path::PathBuf;
 use std::process::Command;
 
-
 fn main() {
     // build `libloragw`
     Command::new("make")
@@ -29,21 +28,11 @@ fn main() {
         conf_path.to_str().unwrap()
     );
 
-    // let embedded_hal_path =
-    // PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("../embedded-hal-bindings/target");
-
-    // // println!(
-    // //     "cargo:rustc-link-lib=static={}",
-    // //     embedded_hal_path.to_str().unwrap()
-    // // );
-
-
    // make the bindings
    let bindings = bindgen::Builder::default()
        .raw_line("use cty;")
        .use_core()
        .ctypes_prefix("cty")
-       .clang_arg("-I../embedded-hal-bindings/target")
        .header("board.h")
        .header("helium.h")
        .header("radio/radio.h")
@@ -88,7 +77,6 @@ fn main() {
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
 
-
     cc::Build::new()
         .pic(false)
         .include("../embedded-hal-bindings/target")
@@ -96,6 +84,4 @@ fn main() {
         .file("helium.c")
         .file("radio/sx1276/sx1276.c")
         .compile("sx1276");
-
-
 }

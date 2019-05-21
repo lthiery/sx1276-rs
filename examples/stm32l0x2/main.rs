@@ -52,11 +52,11 @@ const APP: () = {
 
         let gpioa = dp.GPIOA.split(&mut rcc);
 
-        let tx_pin = gpioa.pa9;
-        let rx_pin = gpioa.pa10;
+        let tx_pin = gpioa.pa2;
+        let rx_pin = gpioa.pa3;
 
         let serial = dp
-            .USART1
+            .USART2
             .usart((tx_pin, rx_pin), serial::Config::default(), &mut rcc)
             .unwrap();
 
@@ -108,15 +108,17 @@ const APP: () = {
     #[interrupt(resources = [LED, INT, BUTTON])]
     fn EXTI2_3() {
         static mut STATE: bool = false;
+
         // Clear the interrupt flag.
         resources.INT.clear_irq(resources.BUTTON.i);
         if *STATE {
-            embedded_hal::digital::v2::OutputPin::set_low(LED).unwrap();
-            *STATE = false;
+           resources.LED.set_low().unwrap();
+           *STATE = false;
         } else {
-            embedded_hal::digital::v2::OutputPin::set_high(LED).unwrap();
+            resources.LED.set_high().unwrap();
            *STATE = true;
         }
+        
     }
 
 };
