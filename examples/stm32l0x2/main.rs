@@ -26,14 +26,12 @@
 #define BOARD_TCXO_WAKEUP_TIME               5
 */
 
-// panic handler
-extern crate panic_semihosting;
-
-use core::fmt::Write;
-use cortex_m_rt::entry;
-use sx1276;
+extern crate panic_halt;
 use stm32l0xx_hal as hal;
-use hal::{exti::TriggerEdge, gpio::*, pac, prelude::*, rcc::Config, serial, spi};
+use sx1276;
+
+use hal::{exti::TriggerEdge, gpio::*, pac, prelude::*, rcc::Config, spi};
+
 use embedded_hal::digital::v2::OutputPin;
 
 #[rtfm::app(device = stm32l0xx_hal::pac)]
@@ -45,34 +43,12 @@ const APP: () = {
     #[init]
     fn init() -> init::LateResources {
 
-        let dp = pac::Peripherals::take().unwrap();
-
         // Configure the clock.
-        let mut rcc = dp.RCC.freeze(Config::hsi16());
-
-        let gpioa = dp.GPIOA.split(&mut rcc);
-
-        let tx_pin = gpioa.pa2;
-        let rx_pin = gpioa.pa3;
-
-        let serial = dp
-            .USART2
-            .usart((tx_pin, rx_pin), serial::Config::default(), &mut rcc)
-            .unwrap();
-
-        let gpiob = dp.GPIOB.split(&mut rcc);
-        let sck = gpiob.pb3;
-        let miso = gpioa.pa6;
-        let mosi = gpioa.pa7;
-        let nss = gpioa.pa15.into_push_pull_output();
-
-        // Initialise the SPI peripheral.
-        let spi = dp
-            .SPI1
-            .spi((sck, miso, mosi), spi::MODE_0, 100_000.hz(), &mut rcc);
+        let mut rcc = device.RCC.freeze(Config::hsi16());
 
         // Acquire the GPIOB peripheral. This also enables the clock for GPIOB in
         // the RCC register.
+        let gpioa = device.GPIOA.split(&mut rcc);
         let gpiob = device.GPIOB.split(&mut rcc);
 
         // Configure PB5 as output.
@@ -91,6 +67,16 @@ const APP: () = {
             TriggerEdge::Falling,
         );
 
+        let sck = gpiob.pb3;
+        let miso = gpioa.pa6;
+        let mosi = gpioa.pa7;
+        let nss = gpioa.pa15.into_push_pull_output();
+        
+        // Initialise the SPI peripheral.
+        let spi = device
+            .SPI1
+            .spi((sck, miso, mosi), spi::MODE_0, 100_000.hz(), &mut rcc);
+
         // Return the initialised resources.
         init::LateResources {
             LED: led,
@@ -100,15 +86,9 @@ const APP: () = {
 
     }
 
-    #[idle]
-    fn idle() -> !{
-        loop {}
-    }
-
     #[interrupt(resources = [LED, INT, BUTTON])]
     fn EXTI2_3() {
         static mut STATE: bool = false;
-
         // Clear the interrupt flag.
         resources.INT.clear_irq(resources.BUTTON.i);
         if *STATE {
@@ -117,11 +97,11 @@ const APP: () = {
         } else {
             resources.LED.set_high().unwrap();
            *STATE = true;
-        }
-        
+        }    
     }
 
 };
+
 
 use stm32l0xx_hal::gpio::gpioa::*;
 use stm32l0xx_hal::gpio::gpiob::*;
