@@ -30,7 +30,7 @@ extern crate panic_halt;
 use stm32l0xx_hal as hal;
 use sx1276;
 
-use sx1276::{ClientEvent, RfEvent};
+use sx1276::{RfConfig, QualityOfService, ClientEvent, RfEvent};
 use sx1276::LongFi;
 
 use core::fmt::Write;
@@ -41,10 +41,10 @@ use embedded_hal::digital::v2::OutputPin;
 
 #[rtfm::app(device = stm32l0xx_hal::pac)]
 const APP: () = {
-    static mut DI0: bool = false;
     static mut LED: gpiob::PB5<Output<PushPull>> = ();
     static mut INT: pac::EXTI = ();
     static mut BUTTON: gpiob::PB2<Input<PullUp>> = ();
+    static mut SX1276_DIO0: gpiob::PB4<Input<PullUp>> = ();
     static mut DEBUG_UART: serial::Tx<USART2> = ();
 
     #[init]
@@ -108,11 +108,18 @@ const APP: () = {
             .SPI1
             .spi((sck, miso, mosi), spi::MODE_0, 100_000.hz(), &mut rcc);
 
+        LongFi::initialize(RfConfig {
+            always_on: true,
+            qos: QualityOfService::QOS_0,
+            network_poll: 0,
+        });
+
         // Return the initialised resources.
         init::LateResources {
             LED: led,
             INT: exti,
             BUTTON: button,
+            SX1276_DIO0: sx1276_dio0,
             DEBUG_UART: tx,
         }
     }
@@ -143,8 +150,9 @@ const APP: () = {
         }    
     }
 
-    #[interrupt(resources = [DI0], priority = 2, spawn = [radio_event])]
+    #[interrupt(priority = 2, resources = [SX1276_DIO0, INT], spawn = [radio_event])]
     fn EXTI4_15() {
+        resources.INT.clear_irq(resources.SX1276_DIO0.i);
         spawn.radio_event(RfEvent::DIO0); 
     }
 

@@ -50,6 +50,11 @@ int8_t RssiValue = 0;
 int8_t SnrValue = 0;
 
 /*!
+ * Radio events function pointer
+ */
+static RadioEvents_t RadioEvents;
+
+/*!
  * \brief Function to be executed on Radio Tx Done event
  */
 void OnTxDone( void );
@@ -75,13 +80,40 @@ void OnRxTimeout( void );
 void OnRxError( void );
 
 
-void helium_rf_init(struct RfConfig config){
+void helium_rf_init(struct RfConfig config) {
+    // Radio initialization
+    RadioEvents.TxDone = OnTxDone;
+    RadioEvents.RxDone = OnRxDone;
+    RadioEvents.TxTimeout = OnTxTimeout;
+    RadioEvents.RxTimeout = OnRxTimeout;
+    RadioEvents.RxError = OnRxError;
 
+    SX1276Init( &RadioEvents );
+
+    SX1276SetChannel( RF_FREQUENCY );
+
+    SX1276SetTxConfig( MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
+                                   LORA_SPREADING_FACTOR, LORA_CODINGRATE,
+                                   LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
+                                   true, 0, 0, LORA_IQ_INVERSION_ON, 3000 );
+    
+    SX1276SetRxConfig( MODEM_LORA, LORA_BANDWIDTH, LORA_SPREADING_FACTOR,
+                                   LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
+                                   LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
+                                   0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
 }
 
 ClientEvent helium_rf_handle_event(RfEvent event){
-
+  // switch (event) {
+  //   case None,
+  // TxDone,
+  // TxDoneAndRxPending,
+  // TxDoneAndRx,
+  // NewRx
+  // }
 }
+
+
 
 // // this is an interrupt safe call that pushes the event into a queue inside the protocol library
 // bool helium_rf_queue_event(ClientEvent_t){
