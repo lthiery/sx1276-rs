@@ -29,5 +29,5 @@ panic-halt = "0.2.0"
 [dev-dependencies.stm32l0xx-hal]
 git                     = "https://github.com/lthiery/stm32l0xx-hal.git"
 branch					= "master"
-version					= "0.1.7"
+version					= "0.1.8"
 features                = ["stm32l0x2","rt"]

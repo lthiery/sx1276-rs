@@ -104,6 +104,10 @@ void helium_rf_init(struct RfConfig config) {
                                    0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
 }
 
+void helium_rx(){
+  SX1276SetRx(0);
+}
+
 void helium_ping(){
   Buffer[0] = 'P';
   Buffer[1] = 'I';

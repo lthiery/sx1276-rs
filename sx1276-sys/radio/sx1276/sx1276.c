@@ -1055,11 +1055,11 @@ void SX1276SetRx( uint32_t timeout )
 
         if( rxContinuous == false )
         {
-            TimerSetValue( &RxTimeoutSyncWord, ceil( ( 8.0 * ( SX1276.Settings.Fsk.PreambleLen +
-                                                             ( ( SX1276Read( REG_SYNCCONFIG ) &
-                                                                ~RF_SYNCCONFIG_SYNCSIZE_MASK ) +
-                                                                1.0 ) + 10.0 ) /
-                                                             ( double )SX1276.Settings.Fsk.Datarate ) * 1e3 ) + 4 );
+            // TimerSetValue( &RxTimeoutSyncWord, ceil( ( 8.0 * ( SX1276.Settings.Fsk.PreambleLen +
+            //                                                  ( ( SX1276Read( REG_SYNCCONFIG ) &
+            //                                                     ~RF_SYNCCONFIG_SYNCSIZE_MASK ) +
+            //                                                     1.0 ) + 10.0 ) /
+            //                                                  ( double )SX1276.Settings.Fsk.Datarate ) * 1e3 ) + 4 );
             TimerStart( &RxTimeoutSyncWord );
         }
     }

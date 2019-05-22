@@ -5,25 +5,29 @@
 //use nb::block;
 
 /*
-#define RADIO_RESET                          STM32L0_GPIO_PIN_PC0
+/*!
+ * Board MCU pins definitions
+ */
+#define RADIO_RESET                                 PC_0
 
-#define RADIO_MOSI                           STM32L0_GPIO_PIN_PA7_SPI1_MOSI
-#define RADIO_MISO                           STM32L0_GPIO_PIN_PA6_SPI1_MISO
-#define RADIO_SCLK                           STM32L0_GPIO_PIN_PB3_SPI1_SCK
-#define RADIO_NSS                            STM32L0_GPIO_PIN_PA15_SPI1_NSS
+#define RADIO_MOSI                                  PA_7
+#define RADIO_MISO                                  PA_6
+#define RADIO_SCLK                                  PB_3
 
-#define RADIO_DIO_0                          STM32L0_GPIO_PIN_PB4
-#define RADIO_DIO_1                          STM32L0_GPIO_PIN_PB1_TIM3_CH4
-#define RADIO_DIO_2                          STM32L0_GPIO_PIN_PB0_TIM3_CH3
-//#define RADIO_DIO_3                          STM32L0_GPIO_PIN_PC13
+#define RADIO_NSS                                   PA_15
 
-//#define RADIO_TCXO_VCC                       STM32L0_GPIO_PIN_PH1
+#define RADIO_DIO_0                                 PB_4
+#define RADIO_DIO_1                                 PB_1
+#define RADIO_DIO_2                                 PB_0
+#define RADIO_DIO_3                                 PC_13
+#define RADIO_DIO_4                                 PA_5
+#define RADIO_DIO_5                                 PA_4
 
-#define RADIO_ANT_SWITCH_RX                  STM32L0_GPIO_PIN_PA1
-#define RADIO_ANT_SWITCH_TX_RFO              STM32L0_GPIO_PIN_PC2
-#define RADIO_ANT_SWITCH_TX_BOOST            STM32L0_GPIO_PIN_PC1
+#define RADIO_TCXO_POWER                            PA_12
 
-#define BOARD_TCXO_WAKEUP_TIME               5
+#define RADIO_ANT_SWITCH_RX                         PA_1
+#define RADIO_ANT_SWITCH_TX_BOOST                   PC_1
+#define RADIO_ANT_SWITCH_TX_RFO                     PC_2
 */
 
 extern crate panic_halt;
@@ -49,7 +53,6 @@ const APP: () = {
 
     #[init]
     fn init() -> init::LateResources {
-
         // Configure the clock.
         let mut rcc = device.RCC.freeze(Config::hsi16());
 
@@ -96,7 +99,7 @@ const APP: () = {
             &mut device.SYSCFG_COMP,
             sx1276_dio0.port,
             sx1276_dio0.i,
-            TriggerEdge::Falling,
+            TriggerEdge::Rising,
         );
 
         let sck = gpiob.pb3;
@@ -109,14 +112,23 @@ const APP: () = {
             .SPI1
             .spi((sck, miso, mosi), spi::MODE_0, 100_000.hz(), &mut rcc);
 
-        let reset = gpioc.c0;
+        // Get the delay provider.
+        let mut delay = core.SYST.delay(rcc.clocks);
+        let mut reset = gpioc.pc0.into_push_pull_output();
 
+        reset.set_low();
+
+        delay.delay_ms(100_u16);
+
+        reset.set_high();
 
         LongFi::initialize(RfConfig {
             always_on: true,
             qos: QualityOfService::QOS_0,
             network_poll: 0,
         });
+
+        LongFi::set_rx();
 
         // Return the initialised resources.
         init::LateResources {
@@ -131,12 +143,19 @@ const APP: () = {
     #[task(capacity = 4, priority = 2, resources = [DEBUG_UART])]
     fn radio_event(event: RfEvent){
         let client_event = LongFi::handle_event(event);
-        write!(resources.DEBUG_UART, "Radio Event!\r\n").unwrap();
+        
         match client_event {
             ClientEvent::ClientEvent_TxDone => {
                 write!(resources.DEBUG_UART, "Transmit Done!\r\n").unwrap();
+                LongFi::set_rx();
             }
-            _ => (),
+            ClientEvent::ClientEvent_Rx => {
+                write!(resources.DEBUG_UART, "Received packet!\r\n").unwrap();
+                LongFi::send_ping();
+            }
+            _ => {
+                write!(resources.DEBUG_UART, "Unhandled Client Event\r\n").unwrap();
+            },
         }
     }
 
@@ -177,11 +196,13 @@ const APP: () = {
 use stm32l0xx_hal::gpio::gpioa::*;
 use stm32l0xx_hal::gpio::gpiob::*;
 use stm32l0xx_hal::gpio::{Floating, Input, PushPull};
-use stm32l0xx_hal::pac::SPI1;
 
 use embedded_hal::spi::FullDuplex;
 use core::ffi; 
 use nb::block;
+
+use stm32l0xx_hal::pac::SPI1;
+
 
 
 #[repr(C, align(4))]
@@ -259,29 +280,22 @@ pub enum PinConfigs {
 
 #[no_mangle]
 pub extern "C" fn GpioInit(
-    obj: &Gpio_t,
+    obj: Gpio_t,
     pin: PinNames,
     mode: PinModes,
     config: PinConfigs,
     pin_type: PinTypes,
     val: u32,
 ) {
-    let gpio: &mut stm32l0xx_hal::gpio::gpioa::PA15<Output<PushPull>> =
-        unsafe { &mut *(obj as *mut stm32l0xx_hal::gpio::gpioa::PA15<Output<PushPull>>) };
+    let mut gpio: &mut stm32l0xx_hal::gpio::gpioc::PC0<Output<PushPull>> =
+        unsafe { &mut *(obj as *mut stm32l0xx_hal::gpio::gpioc::PC0<Output<PushPull>>) };
 
     if (val == 0) {
-        embedded_hal::digital::v2::OutputPin::set_low(gpio).unwrap();
-    } else {
-        embedded_hal::digital::v2::OutputPin::set_high(gpio).unwrap();
+        gpio.set_low();
     }
-    // // Set RESET pin to 0
-    // GpioInit( &SX1276.Reset, RADIO_RESET, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
-
-    // // Wait 1 ms
-    // DelayMs( 1 );
-
-    // // Configure RESET as input
-    // GpioInit( &SX1276.Reset, RADIO_RESET, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
+    else {
+        gpio.set_high();
+    }
 }
 
 #[no_mangle]
@@ -291,9 +305,9 @@ pub extern "C" fn GpioWrite(obj: Gpio_t, val: u8) {
 
 
     if (val == 0) {
-        embedded_hal::digital::v2::OutputPin::set_low(gpio).unwrap();
+        gpio.set_low().unwrap();
     } else {
-        embedded_hal::digital::v2::OutputPin::set_high(gpio).unwrap();
+        gpio.set_high().unwrap();
     }
 }
 
@@ -336,8 +350,12 @@ type irq_ptr = extern "C" fn();
 #[no_mangle]
 pub extern "C" fn SX1276GetPaSelect(channel: u32) -> u8 {0}
 
+use cortex_m::asm;
+
 #[no_mangle]
-pub extern "C" fn DelayMs(ms: u32){}
+pub extern "C" fn DelayMs(ms: u32){
+    //asm::delay(ms);
+}
 
 #[no_mangle]
 pub extern "C" fn memcpy1(dst: &u8, src: &u8, size: u16){}
