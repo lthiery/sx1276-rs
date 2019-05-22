@@ -165,7 +165,7 @@ const APP: () = {
         LongFi::send_ping();
     }
 
-    #[interrupt(priority = 2, resources = [LED, INT, BUTTON], spawn = [send_ping])]
+    #[interrupt(priority = 1, resources = [LED, INT, BUTTON], spawn = [send_ping])]
     fn EXTI2_3() {
         static mut STATE: bool = false;
         // Clear the interrupt flag.
@@ -180,7 +180,7 @@ const APP: () = {
         spawn.send_ping();
     }
 
-    #[interrupt(priority = 2, resources = [SX1276_DIO0, INT], spawn = [radio_event])]
+    #[interrupt(priority = 1, resources = [SX1276_DIO0, INT], spawn = [radio_event])]
     fn EXTI4_15() {
         resources.INT.clear_irq(resources.SX1276_DIO0.i);
         spawn.radio_event(RfEvent::DIO0); 
