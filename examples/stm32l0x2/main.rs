@@ -57,6 +57,7 @@ const APP: () = {
         // the RCC register.
         let gpioa = device.GPIOA.split(&mut rcc);
         let gpiob = device.GPIOB.split(&mut rcc);
+        let gpioc = device.GPIOC.split(&mut rcc);
 
         let tx_pin = gpioa.pa2;
         let rx_pin = gpioa.pa3;
@@ -108,6 +109,8 @@ const APP: () = {
             .SPI1
             .spi((sck, miso, mosi), spi::MODE_0, 100_000.hz(), &mut rcc);
 
+        let reset = gpioc.c0;
+
 
         LongFi::initialize(RfConfig {
             always_on: true,
@@ -128,7 +131,7 @@ const APP: () = {
     #[task(capacity = 4, priority = 2, resources = [DEBUG_UART])]
     fn radio_event(event: RfEvent){
         let client_event = LongFi::handle_event(event);
-
+        write!(resources.DEBUG_UART, "Radio Event!\r\n").unwrap();
         match client_event {
             ClientEvent::ClientEvent_TxDone => {
                 write!(resources.DEBUG_UART, "Transmit Done!\r\n").unwrap();
@@ -137,7 +140,13 @@ const APP: () = {
         }
     }
 
-    #[interrupt(resources = [LED, INT, BUTTON], priority = 2)]
+    #[task(capacity = 4, priority = 2, resources = [DEBUG_UART])]
+    fn send_ping(){
+        write!(resources.DEBUG_UART, "Sending Ping\r\n").unwrap();
+        LongFi::send_ping();
+    }
+
+    #[interrupt(priority = 2, resources = [LED, INT, BUTTON], spawn = [send_ping])]
     fn EXTI2_3() {
         static mut STATE: bool = false;
         // Clear the interrupt flag.
@@ -148,7 +157,8 @@ const APP: () = {
         } else {
             resources.LED.set_high().unwrap();
            *STATE = true;
-        }    
+        }
+        spawn.send_ping();
     }
 
     #[interrupt(priority = 2, resources = [SX1276_DIO0, INT], spawn = [radio_event])]
@@ -256,7 +266,22 @@ pub extern "C" fn GpioInit(
     pin_type: PinTypes,
     val: u32,
 ) {
+    let gpio: &mut stm32l0xx_hal::gpio::gpioa::PA15<Output<PushPull>> =
+        unsafe { &mut *(obj as *mut stm32l0xx_hal::gpio::gpioa::PA15<Output<PushPull>>) };
 
+    if (val == 0) {
+        embedded_hal::digital::v2::OutputPin::set_low(gpio).unwrap();
+    } else {
+        embedded_hal::digital::v2::OutputPin::set_high(gpio).unwrap();
+    }
+    // // Set RESET pin to 0
+    // GpioInit( &SX1276.Reset, RADIO_RESET, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
+
+    // // Wait 1 ms
+    // DelayMs( 1 );
+
+    // // Configure RESET as input
+    // GpioInit( &SX1276.Reset, RADIO_RESET, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
 }
 
 #[no_mangle]

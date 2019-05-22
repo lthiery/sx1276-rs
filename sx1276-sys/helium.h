@@ -48,3 +48,6 @@ typedef enum RfEvent {
 
 // to be used by client to loop over process_event
 ClientEvent helium_rf_handle_event(RfEvent);
+
+void helium_ping();
+void helium_pong();

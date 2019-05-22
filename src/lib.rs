@@ -60,5 +60,17 @@ impl LongFi{
 		}
 	}
 
+	pub fn send_ping() {
+		unsafe {
+			sx1276_sys::helium_ping();
+		}
+	}
+
+	pub fn send_pong() {
+		unsafe {
+			sx1276_sys::helium_pong();
+		}
+	}
+
 }
 

@@ -53,7 +53,6 @@ const uint8_t PongMsg[] = "PONG";
 uint16_t BufferSize = BUFFER_SIZE;
 uint8_t Buffer[BUFFER_SIZE];
 
-
 int8_t RssiValue = 0;
 int8_t SnrValue = 0;
 
@@ -82,8 +81,6 @@ void OnRxError( void );
  */
 ClientEvent _handle_internal_event(InternalEvent_t event);
 
-
-
 void helium_rf_init(struct RfConfig config) {
     LongFi.radio_events.TxDone = OnTxDone;
     LongFi.radio_events.RxDone = OnRxDone;
@@ -105,6 +102,36 @@ void helium_rf_init(struct RfConfig config) {
                                    LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
                                    LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
                                    0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
+}
+
+void helium_ping(){
+  Buffer[0] = 'P';
+  Buffer[1] = 'I';
+  Buffer[2] = 'N';
+  Buffer[3] = 'G';
+
+  // We fill the buffer with numbers for the payload 
+  for(uint8_t i = 4; i < BufferSize; i++ )
+  {
+    Buffer[i] = i - 4;
+  }
+  DelayMs(1); 
+  SX1276Send( Buffer, BufferSize );
+}
+
+void helium_pong(){
+  Buffer[0] = 'P';
+  Buffer[1] = 'I';
+  Buffer[2] = 'N';
+  Buffer[3] = 'G';
+
+  // We fill the buffer with numbers for the payload 
+  for(uint8_t i = 4; i < BufferSize; i++ )
+  {
+    Buffer[i] = i - 4;
+  }
+  DelayMs(1); 
+  SX1276Send( Buffer, BufferSize );
 }
 
 ClientEvent helium_rf_handle_event(RfEvent event){
@@ -131,13 +158,13 @@ ClientEvent helium_rf_handle_event(RfEvent event){
       (*LongFi.dio_irq_handles[5])();
       break;
     case Timer1:
-      // needs to catch the callback from TimerInit
+      // TODO: needs to dispatch the callback stashed from TimerInit
       break;
     case Timer2:
-      // needs to catch the callback from TimerInit
+      // TODO: needs to dispatch the callback stashed from TimerInit
       break;
     case Timer3:
-      // needs to catch the callback from TimerInit
+      // TODO: needs to dispatch the callback stashed from TimerInit
       break;
   }
 
