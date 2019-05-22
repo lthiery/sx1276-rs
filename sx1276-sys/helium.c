@@ -26,21 +26,22 @@
 #define LORA_FIX_LENGTH_PAYLOAD_ON                  false
 #define LORA_IQ_INVERSION_ON                        false
 
-typedef enum
-{
-    LOWPOWER,
-    RX,
-    RX_TIMEOUT,
-    RX_ERROR,
-    TX,
-    TX_TIMEOUT,
-} States_t;
+
+typedef enum {
+  InternalEvent_None,
+  InternalEvent_TxDone,
+  InternalEvent_RxDone,
+  InternalEvent_TxTimeout,
+  InternalEvent_RxTimeout,
+  InternalEvent_RxError,
+} InternalEvent_t;
 
 #define NUM_IRQ_HANDLES   6
 
 typedef struct {
-    void * dio_irq_handles[NUM_IRQ_HANDLES];
+    void (*dio_irq_handles[NUM_IRQ_HANDLES])(void);
     RadioEvents_t radio_events;
+    InternalEvent_t cur_event;
 } LongFi_t;
 
 #define RX_TIMEOUT_VALUE                            1000
@@ -58,44 +59,39 @@ int8_t SnrValue = 0;
 
 /*!
  * Given the constraints of the SX1276 API, we have to use static struct
- * I guess it's fine since we are unlikely to ever need more than one instance
+ * It sets up the constraint of only one instance per system for now
  */
 static LongFi_t LongFi;
 
-/*!
- * \brief Function to be executed on Radio Tx Done event
+/*
+ *  Functions implemented here that SX1276 will call
+ *  
+ *  As far as I can tell, these are only called from SX1276 when:
+ *      LongFi.dio_irq_handles are dispatched
+ *      Timeout callbacks are dispatched
+ *  With the event refactoring here, these callbacks will only be called from `helium_rf_handle_event`
  */
 void OnTxDone( void );
-
-/*!
- * \brief Function to be executed on Radio Rx Done event
- */
 void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr );
-
-/*!
- * \brief Function executed on Radio Tx Timeout event
- */
 void OnTxTimeout( void );
-
-/*!
- * \brief Function executed on Radio Rx Timeout event
- */
 void OnRxTimeout( void );
-
-/*!
- * \brief Function executed on Radio Rx Error event
- */
 void OnRxError( void );
+
+/*
+ * Private helper for handling internal events
+ */
+ClientEvent _handle_internal_event(InternalEvent_t event);
+
 
 
 void helium_rf_init(struct RfConfig config) {
-    // Radio initialization
     LongFi.radio_events.TxDone = OnTxDone;
     LongFi.radio_events.RxDone = OnRxDone;
     LongFi.radio_events.TxTimeout = OnTxTimeout;
     LongFi.radio_events.RxTimeout = OnRxTimeout;
     LongFi.radio_events.RxError = OnRxError;
 
+    // this function calls TimerInits and SX1276IoIrqInit
     SX1276Init( &LongFi.radio_events );
 
     SX1276SetChannel( RF_FREQUENCY );
@@ -113,31 +109,64 @@ void helium_rf_init(struct RfConfig config) {
 
 ClientEvent helium_rf_handle_event(RfEvent event){
 
+  LongFi.cur_event = InternalEvent_None;
+
   switch (event) {
     case DIO0:
-      LongFi.dio_irq_handles[0];
+      (*LongFi.dio_irq_handles[0])();
       break;
     case DIO1:
-      LongFi.dio_irq_handles[1];
+      (*LongFi.dio_irq_handles[1])();
       break;
     case DIO2:
-      LongFi.dio_irq_handles[2];
+      (*LongFi.dio_irq_handles[2])();
       break;
     case DIO3:
-      LongFi.dio_irq_handles[3];
+      (*LongFi.dio_irq_handles[3])();
       break;
     case DIO4:
-      LongFi.dio_irq_handles[4];
+      (*LongFi.dio_irq_handles[4])();
       break;
     case DIO5:
-      LongFi.dio_irq_handles[5];
+      (*LongFi.dio_irq_handles[5])();
       break;
     case Timer1:
-    break;
+      // needs to catch the callback from TimerInit
+      break;
     case Timer2:
-    break;
+      // needs to catch the callback from TimerInit
+      break;
     case Timer3:
-    break;
+      // needs to catch the callback from TimerInit
+      break;
+  }
+
+  return _handle_internal_event(LongFi.cur_event);
+
+}
+
+ClientEvent _handle_internal_event(InternalEvent_t event){
+  switch (event) {
+    case InternalEvent_None:
+      return ClientEvent_None;
+      break;
+    case InternalEvent_TxDone:
+      // could trigger pending Tx'es here
+      return ClientEvent_TxDone;
+      break;
+    case InternalEvent_RxDone:
+      // could trigger pending Tx'es here
+      return ClientEvent_Rx;
+      break;
+    case InternalEvent_TxTimeout:
+      // potential internal retry logic
+      break;
+    case InternalEvent_RxTimeout:
+      // potential internal retry logic
+      break;
+    case InternalEvent_RxError:
+      // potential internal retry logic
+      break;
   }
 
 }
@@ -146,59 +175,37 @@ void SX1276IoIrqInit(irq_ptr irq_handlers[NUM_IRQ_HANDLES]){
   for(uint32_t i=0; i<NUM_IRQ_HANDLES; i++){
     LongFi.dio_irq_handles[i] = irq_handlers[i]; 
   }
-  
 }
-
-
-
-// // this is an interrupt safe call that pushes the event into a queue inside the protocol library
-// bool helium_rf_queue_event(ClientEvent_t){
-
-// }
-
-// // this will give ownership of a buffer to helium_rf
-// // should it trigger automatic fetch of mail if it remembers it from previous ACK?
-// // if no, then we need to provide an API for client to do that action specifically
-// void helium_rf_set_rx_buf(uint8_t * buf, uint16_t size){
-
-// }
-
-// // to be used by client to loop over process_event
-// bool helium_rf_has_events(){
-
-// }
-// ClientEvent_t helium_rf_process_event(){
-
-// }
 
 
 void OnTxDone( void )
 {
-    //SX1276Sleep( );
+    LongFi.cur_event = InternalEvent_TxDone;
 }
 
 void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
-    //SX1276Sleep( );
-    BufferSize = size;
-    //memcpy( Buffer, payload, BufferSize );
-    RssiValue = rssi;
-    SnrValue = snr;
+  LongFi.cur_event = InternalEvent_RxDone;
+
+  BufferSize = size;
+  //memcpy( Buffer, payload, BufferSize );
+  RssiValue = rssi;
+  SnrValue = snr;
 }
 
 void OnTxTimeout( void )
 {
-    //SX1276Sleep( );
+  LongFi.cur_event = InternalEvent_TxTimeout;
 }
 
 void OnRxTimeout( void )
 {
-    //SX1276Sleep( );
+  LongFi.cur_event = InternalEvent_RxTimeout;
 }
 
 void OnRxError( void )
 {
-    //SX1276Sleep( );
+  LongFi.cur_event = InternalEvent_RxTimeout;
 }
 
 

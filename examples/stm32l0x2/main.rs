@@ -130,7 +130,7 @@ const APP: () = {
         let client_event = LongFi::handle_event(event);
 
         match client_event {
-            ClientEvent::TxDone => {
+            ClientEvent::ClientEvent_TxDone => {
                 write!(resources.DEBUG_UART, "Transmit Done!\r\n").unwrap();
             }
             _ => (),

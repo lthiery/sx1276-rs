@@ -21,11 +21,9 @@ struct RfConfig {
 void helium_rf_init(struct RfConfig);
 
 typedef enum ClientEvent {
-	None,
-	TxDone,
-	TxDoneAndRxPending,
-	TxDoneAndRx,
-	NewRx,
+	ClientEvent_None,
+	ClientEvent_TxDone,
+	ClientEvent_Rx,
 } ClientEvent;
 
 // this is an interrupt safe call that pushes the event into a queue inside the protocol library
