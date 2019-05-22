@@ -9,7 +9,7 @@
 #include <stdbool.h>
 
 
-#define RF_FREQUENCY                                90250000 // Hz //911_000_000 - 400_000
+#define RF_FREQUENCY                                911200000 // Hz //911_000_000 - 400_000
 #define TX_OUTPUT_POWER                             14        // dBm
 
 #define LORA_BANDWIDTH                              0         // [0: 125 kHz,
@@ -45,15 +45,9 @@ const uint8_t PongMsg[] = "PONG";
 uint16_t BufferSize = BUFFER_SIZE;
 uint8_t Buffer[BUFFER_SIZE];
 
-States_t State = LOWPOWER;
 
 int8_t RssiValue = 0;
 int8_t SnrValue = 0;
-
-/*!
- * Radio events function pointer
- */
-static RadioEvents_t RadioEvents;
 
 /*!
  * \brief Function to be executed on Radio Tx Done event
@@ -80,58 +74,39 @@ void OnRxTimeout( void );
  */
 void OnRxError( void );
 
-/**
- * Main application entry point.
- */
-int helium_loop(void)
-{
-    bool isMaster = true;
-    uint8_t i;
 
-    // Radio initialization
-    RadioEvents.TxDone = OnTxDone;
-    RadioEvents.RxDone = OnRxDone;
-    RadioEvents.TxTimeout = OnTxTimeout;
-    RadioEvents.RxTimeout = OnRxTimeout;
-    RadioEvents.RxError = OnRxError;
+void helium_rf_init(struct RfConfig config){
 
-    SX1276Init( &RadioEvents );
-
-    SX1276SetChannel( RF_FREQUENCY );
-
-    SX1276SetTxConfig( MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
-                                   LORA_SPREADING_FACTOR, LORA_CODINGRATE,
-                                   LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
-                                   true, 0, 0, LORA_IQ_INVERSION_ON, 3000 );
-    
-    SX1276SetRxConfig( MODEM_LORA, LORA_BANDWIDTH, LORA_SPREADING_FACTOR,
-                                   LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
-                                   LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
-                                   0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
-    
-    //SX1276Rx( RX_TIMEOUT_VALUE );
-
-  	
-  	while(true){
-  		// Send the next PING frame            
-        Buffer[0] = 'P';
-        Buffer[1] = 'I';
-        Buffer[2] = 'N';
-        Buffer[3] = 'G';
-        // We fill the buffer with numbers for the payload 
-        for( i = 4; i < BufferSize; i++ )
-        {
-            Buffer[i] = i - 4;
-        }
-        DelayMs(1); 
-        SX1276Send( Buffer, BufferSize );
-  	}
 }
+
+ClientEvent helium_rf_handle_event(RfEvent event){
+
+}
+
+// // this is an interrupt safe call that pushes the event into a queue inside the protocol library
+// bool helium_rf_queue_event(ClientEvent_t){
+
+// }
+
+// // this will give ownership of a buffer to helium_rf
+// // should it trigger automatic fetch of mail if it remembers it from previous ACK?
+// // if no, then we need to provide an API for client to do that action specifically
+// void helium_rf_set_rx_buf(uint8_t * buf, uint16_t size){
+
+// }
+
+// // to be used by client to loop over process_event
+// bool helium_rf_has_events(){
+
+// }
+// ClientEvent_t helium_rf_process_event(){
+
+// }
+
 
 void OnTxDone( void )
 {
     //SX1276Sleep( );
-    State = TX;
 }
 
 void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
@@ -141,23 +116,21 @@ void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
     //memcpy( Buffer, payload, BufferSize );
     RssiValue = rssi;
     SnrValue = snr;
-    State = RX;
 }
 
 void OnTxTimeout( void )
 {
     //SX1276Sleep( );
-    State = TX_TIMEOUT;
 }
 
 void OnRxTimeout( void )
 {
     //SX1276Sleep( );
-    State = RX_TIMEOUT;
 }
 
 void OnRxError( void )
 {
     //SX1276Sleep( );
-    State = RX_ERROR;
 }
+
+

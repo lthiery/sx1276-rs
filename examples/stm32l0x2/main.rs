@@ -30,15 +30,22 @@ extern crate panic_halt;
 use stm32l0xx_hal as hal;
 use sx1276;
 
-use hal::{exti::TriggerEdge, gpio::*, pac, prelude::*, rcc::Config, spi};
+use sx1276::{ClientEvent, RfEvent};
+use sx1276::LongFi;
+
+use core::fmt::Write;
+use hal::{exti::TriggerEdge, gpio::*, pac, prelude::*, rcc::Config, spi, serial};
+use hal::serial::USART2;
 
 use embedded_hal::digital::v2::OutputPin;
 
 #[rtfm::app(device = stm32l0xx_hal::pac)]
 const APP: () = {
+    static mut DI0: bool = false;
     static mut LED: gpiob::PB5<Output<PushPull>> = ();
     static mut INT: pac::EXTI = ();
     static mut BUTTON: gpiob::PB2<Input<PullUp>> = ();
+    static mut DEBUG_UART: serial::Tx<USART2> = ();
 
     #[init]
     fn init() -> init::LateResources {
@@ -51,19 +58,43 @@ const APP: () = {
         let gpioa = device.GPIOA.split(&mut rcc);
         let gpiob = device.GPIOB.split(&mut rcc);
 
+        let tx_pin = gpioa.pa2;
+        let rx_pin = gpioa.pa3;
+
+        // Configure the serial peripheral.
+        let serial = device
+            .USART2
+            .usart((tx_pin, rx_pin), serial::Config::default(), &mut rcc)
+            .unwrap();
+
+        let (mut tx, mut rx) = serial.split();
+
+        write!(tx, "SX1276 test\r\n").unwrap();
+
         // Configure PB5 as output.
         let led = gpiob.pb5.into_push_pull_output();
 
+        let exti = device.EXTI;
+
         // Configure PB2 as input.
         let button = gpiob.pb2.into_pull_up_input();
-
-        let exti = device.EXTI;
         // Configure the external interrupt on the falling edge for the pin 2.
         exti.listen(
             &mut rcc,
             &mut device.SYSCFG_COMP,
             button.port,
             button.i,
+            TriggerEdge::Falling,
+        );
+
+        // // Configure PB4 as input.
+        let sx1276_dio0 = gpiob.pb4.into_pull_up_input();
+        // Configure the external interrupt on the falling edge for the pin 2.
+        exti.listen(
+            &mut rcc,
+            &mut device.SYSCFG_COMP,
+            sx1276_dio0.port,
+            sx1276_dio0.i,
             TriggerEdge::Falling,
         );
 
@@ -82,11 +113,23 @@ const APP: () = {
             LED: led,
             INT: exti,
             BUTTON: button,
+            DEBUG_UART: tx,
         }
-
     }
 
-    #[interrupt(resources = [LED, INT, BUTTON])]
+    #[task(capacity = 4, priority = 2, resources = [DEBUG_UART])]
+    fn radio_event(event: RfEvent){
+        let client_event = LongFi::handle_event(event);
+
+        match client_event {
+            ClientEvent::TxDone => {
+                write!(resources.DEBUG_UART, "Transmit Done!\r\n").unwrap();
+            }
+            _ => (),
+        }
+    }
+
+    #[interrupt(resources = [LED, INT, BUTTON], priority = 2)]
     fn EXTI2_3() {
         static mut STATE: bool = false;
         // Clear the interrupt flag.
@@ -100,6 +143,15 @@ const APP: () = {
         }    
     }
 
+    #[interrupt(resources = [DI0], priority = 2, spawn = [radio_event])]
+    fn EXTI4_15() {
+        spawn.radio_event(RfEvent::DIO0); 
+    }
+
+    // Interrupt handlers used to dispatch software tasks
+    extern "C" {
+        fn USART4_USART5();
+    }
 };
 
 
@@ -127,12 +179,6 @@ pub struct Spi_s {
 
 pub type Spi_t = Spi_s;
 
-
-//find more elegant way to make cbindgen export Spi_t
-#[no_mangle]
-pub extern "C" fn foo(s: Spi_t) {
-}
-
 #[no_mangle]
 pub extern "C" fn SpiInOut(s: &mut Spi_t, outData: u16) -> u16 {
 
@@ -153,27 +199,6 @@ pub extern "C" fn SpiInOut(s: &mut Spi_t, outData: u16) -> u16 {
             ),
         >)
     };
-
-    /*
-    let spi: &mut hal::spi::Spi<
-        SPI1,
-        (
-            PB5<Input<Floating>>,
-            PA11<Input<Floating>>,
-            PA12<Input<Floating>>,
-        ),
-    > = unsafe {
-        &mut *(s.Spi.Instance as *mut hal::spi::Spi<
-            SPI1,
-            (
-                PB5<Input<Floating>>,
-                PA11<Input<Floating>>,
-                PA12<Input<Floating>>,
-            ),
-        >)
-    };
-    */
-
 
     spi.send(outData as u8).unwrap();
     let inData = block!(spi.read()).unwrap();
@@ -227,8 +252,6 @@ pub extern "C" fn GpioInit(
 
 #[no_mangle]
 pub extern "C" fn GpioWrite(obj: Gpio_t, val: u8) {
-    //let gpio: &mut stm32l0xx_hal::gpio::gpioa::PA2<Output<PushPull>> =
-    //    unsafe { &mut *(obj as *mut stm32l0xx_hal::gpio::gpioa::PA2<Output<PushPull>>) };
     let gpio: &mut stm32l0xx_hal::gpio::gpioa::PA15<Output<PushPull>> =
         unsafe { &mut *(obj as *mut stm32l0xx_hal::gpio::gpioa::PA15<Output<PushPull>>) };
 
@@ -283,10 +306,7 @@ pub extern "C" fn SX1276IoIrqInit(irq_handlers: [irq_ptr; 6]) {}
 pub extern "C" fn SX1276GetPaSelect(channel: u32) -> u8 {0}
 
 #[no_mangle]
-pub extern "C" fn DelayMs(ms: u32){
-
-    
-}
+pub extern "C" fn DelayMs(ms: u32){}
 
 #[no_mangle]
 pub extern "C" fn memcpy1(dst: &u8, src: &u8, size: u16){}

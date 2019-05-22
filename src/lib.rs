@@ -36,41 +36,26 @@ pub extern "C" fn cad_done(channel_activity_detected: bool) {
 	
 }
 
-pub struct Sx1276;
+pub struct LongFi;
 
-impl Sx1276{
-	// pub fn new(spi: SPI, nss: NSS) -> Sx1276<SPI, NSS>{
-	// 	Sx1276 {
-	// 		spi,
-	// 		nss
-	// 	}
-	// }
 
-	pub fn helium_loop(){
-		unsafe {
-			sx1276_sys::helium_loop();
-		}
+pub use sx1276_sys::QualityOfService;
+pub use sx1276_sys::RfConfig;
 
-	}
+pub use sx1276_sys::RfEvent;
+pub use sx1276_sys::ClientEvent;
 
-	pub fn read(&self, addr: u8) -> u8 {
-		unsafe {
-			sx1276_sys::SX1276Read(addr)
+impl LongFi{
+
+	pub fn initialize(config: RfConfig) {
+		unsafe{
+			sx1276_sys::helium_rf_init(config);
 		}
 	}
 
-	pub fn initialize() {
-		let mut radio_events = sx1276_sys::RadioEvents_t {
-			TxDone: Some(tx_done),
-			TxTimeout: Some(tx_timeout),
-			RxDone: Some(rx_done),
-			RxTimeout: Some(rx_timeout),
-			RxError: Some(rx_error),
-			FhssChangeChannel: Some(fhss_change_channel),
-			CadDone: Some(cad_done)
-		};
+	pub fn handle_event(event: RfEvent) -> ClientEvent {
 		unsafe {
-			sx1276_sys::SX1276Init(&mut radio_events);
+			sx1276_sys::helium_rf_handle_event(event)
 		}
 	}
 
