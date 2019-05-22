@@ -46,6 +46,7 @@ fn main() {
        .whitelist_type("ClientEvent")
        .whitelist_type("QualityOfService")
        .whitelist_type("RfConfig")
+       .whitelist_type("LongFiHandle")
        .whitelist_function("helium_rf_init")
        .whitelist_function("helium_rf_handle_event")
        .whitelist_function("SX1276Init")

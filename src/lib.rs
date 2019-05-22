@@ -36,8 +36,6 @@ pub extern "C" fn cad_done(channel_activity_detected: bool) {
 	
 }
 
-pub struct LongFi;
-
 
 pub use sx1276_sys::QualityOfService;
 pub use sx1276_sys::RfConfig;
@@ -45,7 +43,10 @@ pub use sx1276_sys::RfConfig;
 pub use sx1276_sys::RfEvent;
 pub use sx1276_sys::ClientEvent;
 
+pub struct LongFi;
+
 impl LongFi{
+
 
 	pub fn initialize(config: RfConfig) {
 		unsafe{

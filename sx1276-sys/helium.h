@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+
 // I'm calling "mail" downstream packets
 // Presumably, our RF ACK provide a bit-flag notice about mail being available
 typedef enum QualityOfService {
@@ -38,10 +39,10 @@ void helium_rf_set_rx_buf(uint8_t * buf, uint16_t size);
 typedef enum RfEvent {
 	DIO0,
 	DIO1,
+	DIO2,
 	DIO3,
 	DIO4,
 	DIO5,
-	DIO6,
 	Timer1,
 	Timer2,
 	Timer3

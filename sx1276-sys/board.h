@@ -51,6 +51,7 @@ typedef struct {
 typedef Spi_s Spi_t;
 
 typedef struct {
+  uint8_t id;
   bool IsRunning;
 } TimerEvent_s;
 
@@ -98,8 +99,6 @@ void TimerStart(const TimerEvent_t *obj);
 void TimerStop(const TimerEvent_t *obj);
 
 void assert_param(bool expr);
-
-void foo(Spi_t s);
 
 void memcpy1(const uint8_t *dst, const uint8_t *src, uint16_t size);
 

@@ -108,6 +108,7 @@ const APP: () = {
             .SPI1
             .spi((sck, miso, mosi), spi::MODE_0, 100_000.hz(), &mut rcc);
 
+
         LongFi::initialize(RfConfig {
             always_on: true,
             qos: QualityOfService::QOS_0,
@@ -306,9 +307,6 @@ pub extern "C" fn TimerGetFutureTime(event_in_future: &TimerEvent_t) {}
 pub extern "C" fn TimerLowPowerHandler() {}
 
 type irq_ptr = extern "C" fn();
-
-#[no_mangle]
-pub extern "C" fn SX1276IoIrqInit(irq_handlers: [irq_ptr; 6]) {}
 
 #[no_mangle]
 pub extern "C" fn SX1276GetPaSelect(channel: u32) -> u8 {0}

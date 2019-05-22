@@ -36,6 +36,13 @@ typedef enum
     TX_TIMEOUT,
 } States_t;
 
+#define NUM_IRQ_HANDLES   6
+
+typedef struct {
+    void * dio_irq_handles[NUM_IRQ_HANDLES];
+    RadioEvents_t radio_events;
+} LongFi_t;
+
 #define RX_TIMEOUT_VALUE                            1000
 #define BUFFER_SIZE                                 64 // Define the payload size here
 
@@ -50,9 +57,10 @@ int8_t RssiValue = 0;
 int8_t SnrValue = 0;
 
 /*!
- * Radio events function pointer
+ * Given the constraints of the SX1276 API, we have to use static struct
+ * I guess it's fine since we are unlikely to ever need more than one instance
  */
-static RadioEvents_t RadioEvents;
+static LongFi_t LongFi;
 
 /*!
  * \brief Function to be executed on Radio Tx Done event
@@ -82,13 +90,13 @@ void OnRxError( void );
 
 void helium_rf_init(struct RfConfig config) {
     // Radio initialization
-    RadioEvents.TxDone = OnTxDone;
-    RadioEvents.RxDone = OnRxDone;
-    RadioEvents.TxTimeout = OnTxTimeout;
-    RadioEvents.RxTimeout = OnRxTimeout;
-    RadioEvents.RxError = OnRxError;
+    LongFi.radio_events.TxDone = OnTxDone;
+    LongFi.radio_events.RxDone = OnRxDone;
+    LongFi.radio_events.TxTimeout = OnTxTimeout;
+    LongFi.radio_events.RxTimeout = OnRxTimeout;
+    LongFi.radio_events.RxError = OnRxError;
 
-    SX1276Init( &RadioEvents );
+    SX1276Init( &LongFi.radio_events );
 
     SX1276SetChannel( RF_FREQUENCY );
 
@@ -104,13 +112,41 @@ void helium_rf_init(struct RfConfig config) {
 }
 
 ClientEvent helium_rf_handle_event(RfEvent event){
-  // switch (event) {
-  //   case None,
-  // TxDone,
-  // TxDoneAndRxPending,
-  // TxDoneAndRx,
-  // NewRx
-  // }
+
+  switch (event) {
+    case DIO0:
+      LongFi.dio_irq_handles[0];
+      break;
+    case DIO1:
+      LongFi.dio_irq_handles[1];
+      break;
+    case DIO2:
+      LongFi.dio_irq_handles[2];
+      break;
+    case DIO3:
+      LongFi.dio_irq_handles[3];
+      break;
+    case DIO4:
+      LongFi.dio_irq_handles[4];
+      break;
+    case DIO5:
+      LongFi.dio_irq_handles[5];
+      break;
+    case Timer1:
+    break;
+    case Timer2:
+    break;
+    case Timer3:
+    break;
+  }
+
+}
+
+void SX1276IoIrqInit(irq_ptr irq_handlers[NUM_IRQ_HANDLES]){
+  for(uint32_t i=0; i<NUM_IRQ_HANDLES; i++){
+    LongFi.dio_irq_handles[i] = irq_handlers[i]; 
+  }
+  
 }
 
 
