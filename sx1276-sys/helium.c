@@ -4,12 +4,13 @@
 #include "radio/radio.h"
 #include "radio/sx1276/sx1276.h"
 
+#include <string.h> 
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
 
-#define RF_FREQUENCY                                911200000 // Hz //911_000_000 - 400_000
+#define RF_FREQUENCY                                903500000 // Hz //911_000_000 - 400_000
 #define TX_OUTPUT_POWER                             14        // dBm
 
 #define LORA_BANDWIDTH                              0         // [0: 125 kHz,
@@ -39,9 +40,12 @@ typedef enum {
 #define NUM_IRQ_HANDLES   6
 
 typedef struct {
-    void (*dio_irq_handles[NUM_IRQ_HANDLES])(void);
-    RadioEvents_t radio_events;
-    InternalEvent_t cur_event;
+  struct RfConfig config;
+  void (*dio_irq_handles[NUM_IRQ_HANDLES])(void);
+  RadioEvents_t radio_events;
+  InternalEvent_t cur_event;
+  uint8_t * rx_buffer;
+  uint8_t rx_buffer_len;
 } LongFi_t;
 
 #define RX_TIMEOUT_VALUE                            1000
@@ -82,26 +86,33 @@ void OnRxError( void );
 ClientEvent _handle_internal_event(InternalEvent_t event);
 
 void helium_rf_init(struct RfConfig config) {
-    LongFi.radio_events.TxDone = OnTxDone;
-    LongFi.radio_events.RxDone = OnRxDone;
-    LongFi.radio_events.TxTimeout = OnTxTimeout;
-    LongFi.radio_events.RxTimeout = OnRxTimeout;
-    LongFi.radio_events.RxError = OnRxError;
+  // save config in static struct
+  LongFi.config = config;
 
-    // this function calls TimerInits and SX1276IoIrqInit
-    SX1276Init( &LongFi.radio_events );
+  LongFi.rx_buffer = NULL;
+  LongFi.rx_buffer_len = 0;
 
-    SX1276SetChannel( RF_FREQUENCY );
+  // configure sx1276 radio events with local helium functions
+  LongFi.radio_events.TxDone = OnTxDone;
+  LongFi.radio_events.RxDone = OnRxDone;
+  LongFi.radio_events.TxTimeout = OnTxTimeout;
+  LongFi.radio_events.RxTimeout = OnRxTimeout;
+  LongFi.radio_events.RxError = OnRxError;
 
-    SX1276SetTxConfig( MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
-                                   LORA_SPREADING_FACTOR, LORA_CODINGRATE,
-                                   LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
-                                   true, 0, 0, LORA_IQ_INVERSION_ON, 3000 );
-    
-    SX1276SetRxConfig( MODEM_LORA, LORA_BANDWIDTH, LORA_SPREADING_FACTOR,
-                                   LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
-                                   LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
-                                   0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
+  // this function calls TimerInits and SX1276IoIrqInit, which are implemented here
+  SX1276Init( &LongFi.radio_events );
+
+  SX1276SetChannel( RF_FREQUENCY );
+
+  SX1276SetTxConfig( MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
+                                 LORA_SPREADING_FACTOR, LORA_CODINGRATE,
+                                 LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
+                                 true, 0, 0, LORA_IQ_INVERSION_ON, 3000 );
+  
+  SX1276SetRxConfig( MODEM_LORA, LORA_BANDWIDTH, LORA_SPREADING_FACTOR,
+                                 LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
+                                 LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
+                                 0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
 }
 
 void helium_rx(){
@@ -199,7 +210,7 @@ ClientEvent _handle_internal_event(InternalEvent_t event){
       // potential internal retry logic
       break;
   }
-
+  return ClientEvent_None;
 }
 
 void SX1276IoIrqInit(irq_ptr irq_handlers[NUM_IRQ_HANDLES]){
@@ -219,7 +230,10 @@ void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
   LongFi.cur_event = InternalEvent_RxDone;
 
   BufferSize = size;
-  //memcpy( Buffer, payload, BufferSize );
+
+  if(LongFi.rx_buffer!=NULL && size <= LongFi.rx_buffer_len){
+    memcpy(LongFi.rx_buffer, payload, size);
+  }
   RssiValue = rssi;
   SnrValue = snr;
 }
