@@ -129,7 +129,6 @@ void helium_rx(){
     _x < _y ? _x : _y; })
 
 void helium_send(const uint8_t * data, size_t len){
-
   // casting is fine for now, but later we need to spread the packet over channels 
   uint8_t send_len = (uint8_t) MIN(len, LongFi.buffer_len);
    
@@ -148,7 +147,7 @@ RxPacket helium_get_rx(){
     .snr = SnrValue,
   };
   LongFi.buffer = NULL;
-  LongFi.rx_len = 0;
+  LongFi.buffer_len = 0;
   return rx;
 }
 
@@ -259,7 +258,6 @@ void OnTxDone( void )
 void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
   LongFi.cur_event = InternalEvent_RxDone;
-
   uint8_t rx_len = (uint8_t) MIN( (uint32_t) size, LongFi.buffer_len);
   LongFi.rx_len = rx_len;
   memcpy(LongFi.buffer, payload, rx_len);

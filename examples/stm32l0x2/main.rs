@@ -112,7 +112,7 @@ const APP: () = {
         // Initialise the SPI peripheral.
         let spi = device
             .SPI1
-            .spi((sck, miso, mosi), spi::MODE_0, 100_000.hz(), &mut rcc);
+            .spi((sck, miso, mosi), spi::MODE_0, 2_000_000.hz(), &mut rcc);
 
         // Get the delay provider.
         let mut delay = core.SYST.delay(rcc.clocks);
@@ -154,19 +154,22 @@ const APP: () = {
                 LongFi::set_rx();
             }
             ClientEvent::ClientEvent_Rx => {
+                // get receive buffer
                 let rx_packet = LongFi::get_rx();
                 write!(resources.DEBUG_UART, "Received packet\r\n").unwrap();
-                write!(resources.DEBUG_UART, "  Length = {}\r\n", rx_packet.len).unwrap();
-                write!(resources.DEBUG_UART, "  Rssi = {}\r\n", rx_packet.rssi).unwrap();
-                write!(resources.DEBUG_UART, "  Snr = {}\r\n", rx_packet.snr).unwrap();
-
-                for i in 0..rx_packet.len {
-                    unsafe {
-                        write!(resources.DEBUG_UART, "{:x},", *rx_packet.buf.offset(i as isize)).unwrap();
+                write!(resources.DEBUG_UART, "  Length =  {}\r\n", rx_packet.len).unwrap();
+                write!(resources.DEBUG_UART, "  Rssi   = {}\r\n", rx_packet.rssi).unwrap();
+                write!(resources.DEBUG_UART, "  Snr    =  {}\r\n", rx_packet.snr).unwrap();
+                unsafe {
+                    for i in 0..rx_packet.len {
+                        
+                            write!(resources.DEBUG_UART, "{:X} ", *rx_packet.buf.offset(i as isize)).unwrap();
+                        
                     }
+                    write!(resources.DEBUG_UART, "\r\n").unwrap();
                 }
+                // give buffer back to library
                 LongFi::set_buffer(resources.BUFFER);
-
             }
             _ => {
                 write!(resources.DEBUG_UART, "Unhandled Client Event\r\n").unwrap();
