@@ -238,6 +238,10 @@ void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
   SnrValue = snr;
 }
 
+void memcpy1(const uint8_t *dst, const uint8_t *src, uint16_t size){
+  memcpy((void*) dst, (void*) src, size);
+}
+
 void OnTxTimeout( void )
 {
   LongFi.cur_event = InternalEvent_TxTimeout;

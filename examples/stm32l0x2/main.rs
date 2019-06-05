@@ -2,8 +2,6 @@
 #![no_main]
 #![feature(lang_items)]
 
-//use nb::block;
-
 /*
 /*!
  * Board MCU pins definitions
@@ -194,7 +192,6 @@ const APP: () = {
 
 
 use stm32l0xx_hal::gpio::gpioa::*;
-use stm32l0xx_hal::gpio::gpiob::*;
 use stm32l0xx_hal::gpio::{Floating, Input, PushPull};
 
 use embedded_hal::spi::FullDuplex;
@@ -208,7 +205,6 @@ use stm32l0xx_hal::pac::SPI1;
 #[repr(C, align(4))]
 pub struct SpiInstance {
     Instance:*mut ffi::c_void,
-    //Reset: &Gpio_t,
 }
 
 #[repr(C, align(4))]
@@ -356,9 +352,6 @@ use cortex_m::asm;
 pub extern "C" fn DelayMs(ms: u32){
     //asm::delay(ms);
 }
-
-#[no_mangle]
-pub extern "C" fn memcpy1(dst: &u8, src: &u8, size: u16){}
 
 #[no_mangle]
 pub extern "C" fn SX1276SetAntSwLowPower(status: bool){}
