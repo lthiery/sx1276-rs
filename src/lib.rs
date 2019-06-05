@@ -3,7 +3,7 @@ use sx1276_sys;
 
 pub use sx1276_sys::QualityOfService;
 pub use sx1276_sys::RfConfig;
-
+pub use sx1276_sys::RxPacket;
 pub use sx1276_sys::RfEvent;
 pub use sx1276_sys::ClientEvent;
 
@@ -12,9 +12,15 @@ pub struct LongFi;
 impl LongFi{
 
 
-	pub fn initialize(config: RfConfig, buffer: &mut [u8]) {
+	pub fn initialize(config: RfConfig) {
 		unsafe{
-			sx1276_sys::helium_rf_init(config, buffer.as_mut_ptr(), buffer.len());
+			sx1276_sys::helium_rf_init(config);
+		}
+	}
+
+	pub fn set_buffer(buffer: &mut [u8]) {
+		unsafe {
+			sx1276_sys::helium_set_buf(buffer.as_mut_ptr(), buffer.len());
 		}
 	}
 
@@ -25,7 +31,6 @@ impl LongFi{
 		}
 	}
 
-	//for debugging
 	pub fn set_rx() {
 		unsafe {
 			sx1276_sys::SX1276SetRx(0);
@@ -45,9 +50,9 @@ impl LongFi{
 		}
 	}
 
-	pub fn get_rx_len() -> usize {
+	pub fn get_rx() -> RxPacket {
 		unsafe {
-			sx1276_sys::helium_get_rx_len()
+			sx1276_sys::helium_get_rx()
 		}
 		
 	}

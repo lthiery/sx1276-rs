@@ -58,7 +58,7 @@ const uint8_t PongMsg[] = "PONG";
 uint16_t BufferSize = BUFFER_SIZE;
 uint8_t Buffer[BUFFER_SIZE];
 
-int8_t RssiValue = 0;
+int16_t RssiValue = 0;
 int8_t SnrValue = 0;
 
 /*!
@@ -86,14 +86,9 @@ void OnRxError( void );
  */
 ClientEvent _handle_internal_event(InternalEvent_t event);
 
-void helium_rf_init(struct RfConfig config, uint8_t * buffer, size_t buffer_len) {
+void helium_rf_init(struct RfConfig config) {
   // save config in static struct
   LongFi.config = config;
-
-  LongFi.buffer = buffer;
-  LongFi.buffer_len = (buffer==NULL) ? buffer_len : 0;
-
-  buffer[0] = 0xff;
 
   // configure sx1276 radio events with local helium functions
   LongFi.radio_events.TxDone = OnTxDone;
@@ -118,6 +113,11 @@ void helium_rf_init(struct RfConfig config, uint8_t * buffer, size_t buffer_len)
                                  0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
 }
 
+void helium_set_buf(uint8_t * buffer, size_t buffer_len){
+  LongFi.buffer = buffer;
+  LongFi.buffer_len = (buffer!=NULL) ? buffer_len : 0;
+}
+
 void helium_rx(){
   SX1276SetRx(0);
 }
@@ -140,8 +140,16 @@ void helium_send(const uint8_t * data, size_t len){
   SX1276Send(LongFi.buffer, send_len);
 }
 
-size_t helium_get_rx_len(){
-  return LongFi.rx_len;
+RxPacket helium_get_rx(){
+  RxPacket rx = {
+    .buf = LongFi.buffer,
+    .len = LongFi.rx_len,
+    .rssi = RssiValue,
+    .snr = SnrValue,
+  };
+  LongFi.buffer = NULL;
+  LongFi.rx_len = 0;
+  return rx;
 }
 
 void helium_ping(){
@@ -254,11 +262,7 @@ void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 
   uint8_t rx_len = (uint8_t) MIN( (uint32_t) size, LongFi.buffer_len);
   LongFi.rx_len = rx_len;
-  LongFi.buffer[0] = 0xFF;
-  LongFi.buffer[1] = 0xDE;
-  LongFi.buffer[2] = 0xAD;
-
-  //memcpy(LongFi.buffer, payload, rx_len);
+  memcpy(LongFi.buffer, payload, rx_len);
   RssiValue = rssi;
   SnrValue = snr;
 }

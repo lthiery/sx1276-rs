@@ -51,6 +51,7 @@ const APP: () = {
     static mut SX1276_DIO0: gpiob::PB4<Input<PullUp>> = ();
     static mut DEBUG_UART: serial::Tx<USART2> = ();
     static mut BUFFER: [u8; 512] = [0; 512];
+    static mut COUNT: u8 = 0;
 
     #[init(resources = [BUFFER])]
     fn init() -> init::LateResources {
@@ -128,10 +129,9 @@ const APP: () = {
                 always_on: true,
                 qos: QualityOfService::QOS_0,
                 network_poll: 0,
-            },
-            resources.BUFFER
+            }
         );
-
+        LongFi::set_buffer(resources.BUFFER);
         LongFi::set_rx();
 
         // Return the initialised resources.
@@ -144,7 +144,7 @@ const APP: () = {
         }
     }
 
-    #[task(capacity = 4, priority = 2, resources = [DEBUG_UART])]
+    #[task(capacity = 4, priority = 2, resources = [DEBUG_UART, BUFFER])]
     fn radio_event(event: RfEvent){
         let client_event = LongFi::handle_event(event);
         
@@ -154,13 +154,18 @@ const APP: () = {
                 LongFi::set_rx();
             }
             ClientEvent::ClientEvent_Rx => {
-                let len = LongFi::get_rx();
+                let rx_packet = LongFi::get_rx();
                 write!(resources.DEBUG_UART, "Received packet\r\n").unwrap();
-                write!(resources.DEBUG_UART, "  Length = {}\r\n", len).unwrap();
+                write!(resources.DEBUG_UART, "  Length = {}\r\n", rx_packet.len).unwrap();
+                write!(resources.DEBUG_UART, "  Rssi = {}\r\n", rx_packet.rssi).unwrap();
+                write!(resources.DEBUG_UART, "  Snr = {}\r\n", rx_packet.snr).unwrap();
 
-                for i in 0..len {
-                    write!(resources.DEBUG_UART, "{}", resources.BUFFER[i]).unwrap();
+                for i in 0..rx_packet.len {
+                    unsafe {
+                        write!(resources.DEBUG_UART, "{:x},", *rx_packet.buf.offset(i as isize)).unwrap();
+                    }
                 }
+                LongFi::set_buffer(resources.BUFFER);
 
             }
             _ => {
@@ -169,10 +174,12 @@ const APP: () = {
         }
     }
 
-    #[task(capacity = 4, priority = 2, resources = [DEBUG_UART])]
+    #[task(capacity = 4, priority = 2, resources = [DEBUG_UART, COUNT])]
     fn send_ping(){
         write!(resources.DEBUG_UART, "Sending Ping\r\n").unwrap();
-        LongFi::send_ping();
+        let packet: [u8; 5] = [0xDE, 0xAD, 0xBE, 0xEF, *resources.COUNT];
+        *resources.COUNT+=1;
+        LongFi::send(&packet, packet.len());
     }
 
     #[interrupt(priority = 1, resources = [LED, INT, BUTTON], spawn = [send_ping])]
