@@ -39,6 +39,8 @@ use core::fmt::Write;
 use hal::{exti::TriggerEdge, gpio::*, pac, prelude::*, rcc::Config, spi, serial};
 use hal::serial::USART2;
 
+
+
 use embedded_hal::digital::v2::OutputPin;
 
 #[rtfm::app(device = stm32l0xx_hal::pac)]
@@ -48,8 +50,9 @@ const APP: () = {
     static mut BUTTON: gpiob::PB2<Input<PullUp>> = ();
     static mut SX1276_DIO0: gpiob::PB4<Input<PullUp>> = ();
     static mut DEBUG_UART: serial::Tx<USART2> = ();
+    static mut BUFFER: [u8; 512] = [0; 512];
 
-    #[init]
+    #[init(resources = [BUFFER])]
     fn init() -> init::LateResources {
         // Configure the clock.
         let mut rcc = device.RCC.freeze(Config::hsi16());
@@ -120,11 +123,14 @@ const APP: () = {
 
         reset.set_high();
 
-        LongFi::initialize(RfConfig {
-            always_on: true,
-            qos: QualityOfService::QOS_0,
-            network_poll: 0,
-        });
+        LongFi::initialize(
+            RfConfig {
+                always_on: true,
+                qos: QualityOfService::QOS_0,
+                network_poll: 0,
+            },
+            resources.BUFFER
+        );
 
         LongFi::set_rx();
 
@@ -148,8 +154,14 @@ const APP: () = {
                 LongFi::set_rx();
             }
             ClientEvent::ClientEvent_Rx => {
-                write!(resources.DEBUG_UART, "Received packet!\r\n").unwrap();
-                LongFi::send_ping();
+                let len = LongFi::get_rx();
+                write!(resources.DEBUG_UART, "Received packet\r\n").unwrap();
+                write!(resources.DEBUG_UART, "  Length = {}\r\n", len).unwrap();
+
+                for i in 0..len {
+                    write!(resources.DEBUG_UART, "{}", resources.BUFFER[i]).unwrap();
+                }
+
             }
             _ => {
                 write!(resources.DEBUG_UART, "Unhandled Client Event\r\n").unwrap();

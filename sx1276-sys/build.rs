@@ -50,6 +50,8 @@ fn main() {
        .whitelist_function("helium_rf_handle_event")
        .whitelist_function("helium_ping")
        .whitelist_function("helium_pong")
+       .whitelist_function("helium_send")
+       .whitelist_function("helium_get_rx_len")
        .whitelist_function("SX1276Init")
        .whitelist_function("SX1276GetStatus")
        .whitelist_function("SX1276SetModem")

@@ -12,9 +12,9 @@ pub struct LongFi;
 impl LongFi{
 
 
-	pub fn initialize(config: RfConfig) {
+	pub fn initialize(config: RfConfig, buffer: &mut [u8]) {
 		unsafe{
-			sx1276_sys::helium_rf_init(config);
+			sx1276_sys::helium_rf_init(config, buffer.as_mut_ptr(), buffer.len());
 		}
 	}
 
@@ -36,6 +36,20 @@ impl LongFi{
 		unsafe {
 			sx1276_sys::helium_rf_handle_event(event)
 		}
+	}
+
+	pub fn send(buffer: &[u8], len: usize){
+		let send_len = ::core::cmp::min(len, buffer.len());
+		unsafe {
+			sx1276_sys::helium_send(buffer.as_ptr(), send_len);
+		}
+	}
+
+	pub fn get_rx_len() -> usize {
+		unsafe {
+			sx1276_sys::helium_get_rx_len()
+		}
+		
 	}
 
 	pub fn send_ping() {

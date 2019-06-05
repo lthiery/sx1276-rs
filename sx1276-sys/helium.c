@@ -10,7 +10,7 @@
 #include <stdbool.h>
 
 
-#define RF_FREQUENCY                                903500000 // Hz //911_000_000 - 400_000
+#define RF_FREQUENCY                                911200000 // Hz //911_000_000 - 400_000
 #define TX_OUTPUT_POWER                             14        // dBm
 
 #define LORA_BANDWIDTH                              0         // [0: 125 kHz,
@@ -44,8 +44,9 @@ typedef struct {
   void (*dio_irq_handles[NUM_IRQ_HANDLES])(void);
   RadioEvents_t radio_events;
   InternalEvent_t cur_event;
-  uint8_t * rx_buffer;
-  uint8_t rx_buffer_len;
+  uint8_t * buffer;
+  size_t buffer_len;
+  uint32_t rx_len;
 } LongFi_t;
 
 #define RX_TIMEOUT_VALUE                            1000
@@ -85,12 +86,14 @@ void OnRxError( void );
  */
 ClientEvent _handle_internal_event(InternalEvent_t event);
 
-void helium_rf_init(struct RfConfig config) {
+void helium_rf_init(struct RfConfig config, uint8_t * buffer, size_t buffer_len) {
   // save config in static struct
   LongFi.config = config;
 
-  LongFi.rx_buffer = NULL;
-  LongFi.rx_buffer_len = 0;
+  LongFi.buffer = buffer;
+  LongFi.buffer_len = (buffer==NULL) ? buffer_len : 0;
+
+  buffer[0] = 0xff;
 
   // configure sx1276 radio events with local helium functions
   LongFi.radio_events.TxDone = OnTxDone;
@@ -119,6 +122,28 @@ void helium_rx(){
   SX1276SetRx(0);
 }
 
+#define MIN(x,y) ({ \
+    typeof(x) _x = (x);     \
+    typeof(y) _y = (y);     \
+    (void) (&_x == &_y);    \
+    _x < _y ? _x : _y; })
+
+void helium_send(const uint8_t * data, size_t len){
+
+  // casting is fine for now, but later we need to spread the packet over channels 
+  uint8_t send_len = (uint8_t) MIN(len, LongFi.buffer_len);
+   
+  for(uint8_t i = 0; i < send_len; i++ )
+  {
+     LongFi.buffer[i] = data[i];
+  }
+  SX1276Send(LongFi.buffer, send_len);
+}
+
+size_t helium_get_rx_len(){
+  return LongFi.rx_len;
+}
+
 void helium_ping(){
   Buffer[0] = 'P';
   Buffer[1] = 'I';
@@ -130,7 +155,6 @@ void helium_ping(){
   {
     Buffer[i] = i - 4;
   }
-  DelayMs(1); 
   SX1276Send( Buffer, BufferSize );
 }
 
@@ -145,7 +169,6 @@ void helium_pong(){
   {
     Buffer[i] = i - 4;
   }
-  DelayMs(1); 
   SX1276Send( Buffer, BufferSize );
 }
 
@@ -229,11 +252,13 @@ void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
   LongFi.cur_event = InternalEvent_RxDone;
 
-  BufferSize = size;
+  uint8_t rx_len = (uint8_t) MIN( (uint32_t) size, LongFi.buffer_len);
+  LongFi.rx_len = rx_len;
+  LongFi.buffer[0] = 0xFF;
+  LongFi.buffer[1] = 0xDE;
+  LongFi.buffer[2] = 0xAD;
 
-  if(LongFi.rx_buffer!=NULL && size <= LongFi.rx_buffer_len){
-    memcpy(LongFi.rx_buffer, payload, size);
-  }
+  //memcpy(LongFi.buffer, payload, rx_len);
   RssiValue = rssi;
   SnrValue = snr;
 }

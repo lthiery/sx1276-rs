@@ -18,7 +18,7 @@ struct RfConfig {
 	uint32_t network_poll; // even w/o data, protocol could be configured to poll the network periodically
 };
 
-void helium_rf_init(struct RfConfig);
+void helium_rf_init(struct RfConfig config, uint8_t * buffer, size_t buffer_len);
 
 typedef enum ClientEvent {
 	ClientEvent_None,
@@ -33,6 +33,9 @@ bool helium_rf_queue_event(ClientEvent);
 // should it trigger automatic fetch of mail if it remembers it from previous ACK?
 // if no, then we need to provide an API for client to do that action specifically
 void helium_rf_set_rx_buf(uint8_t * buf, uint16_t size);
+
+void helium_send(const uint8_t * data, size_t len);
+size_t helium_get_rx_len();
 
 typedef enum RfEvent {
 	DIO0,
