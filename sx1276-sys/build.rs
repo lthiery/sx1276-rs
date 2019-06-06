@@ -92,7 +92,7 @@ fn main() {
 
     cc::Build::new()
         .pic(false)
-        .include("../embedded-hal-bindings/target")
+        .include("./")
         .include("radio")
         .file("helium.c")
         .file("radio/sx1276/sx1276.c")
