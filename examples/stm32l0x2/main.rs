@@ -120,6 +120,15 @@ const APP: () = {
         let mut reset = gpioc.pc0.into_push_pull_output();
 
         let mut en_tcxo = gpiob.pb14.into_push_pull_output();
+
+        //#define RADIO_ANT_SWITCH_RX                  STM32L0_GPIO_PIN_PA1
+        //#define RADIO_ANT_SWITCH_TX_RFO              STM32L0_GPIO_PIN_PC2
+        //#define RADIO_ANT_SWITCH_TX_BOOST            STM32L0_GPIO_PIN_PC1
+        let mut ant_sw_rx       = gpioa.pa1.into_push_pull_output();
+        let mut ant_sw_tx_rfo   = gpioc.pc2.into_push_pull_output();
+        let mut ant_sw_tx_boost = gpioc.pc1.into_push_pull_output();
+
+
         en_tcxo.set_high();
 
         reset.set_low();

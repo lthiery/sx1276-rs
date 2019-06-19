@@ -86,7 +86,6 @@ void OnRxError( void );
  */
 ClientEvent _handle_internal_event(InternalEvent_t event);
 
-
 void helium_enable_tcxo(){
   SX1276Write( REG_OCP, ( RF_OCP_ON | RF_OCP_TRIM_120_MA ) );
   SX1276Write( REG_TCXO, ( SX1276Read( REG_TCXO ) & RF_TCXO_TCXOINPUT_MASK ) | RF_TCXO_TCXOINPUT_ON );
