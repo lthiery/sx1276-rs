@@ -63,6 +63,7 @@ const APP: () = {
         let gpioa = device.GPIOA.split(&mut rcc);
         let gpiob = device.GPIOB.split(&mut rcc);
         let gpioc = device.GPIOC.split(&mut rcc);
+        let gpioh = device.GPIOH.split(&mut rcc);
 
         let tx_pin = gpioa.pa2;
         let rx_pin = gpioa.pa3;
@@ -112,15 +113,26 @@ const APP: () = {
         // Initialise the SPI peripheral.
         let spi = device
             .SPI1
-            .spi((sck, miso, mosi), spi::MODE_0, 2_000_000.hz(), &mut rcc);
+            .spi((sck, miso, mosi), spi::MODE_0, 1_000_000.hz(), &mut rcc);
 
         // Get the delay provider.
         let mut delay = core.SYST.delay(rcc.clocks);
         let mut reset = gpioc.pc0.into_push_pull_output();
 
+        let mut en_tcxo = gpiob.pb14.into_push_pull_output();
+        en_tcxo.set_high();
+
         reset.set_low();
 
-        delay.delay_ms(100_u16);
+        delay.delay_ms(1_u16);
+
+        reset.set_high();
+        delay.delay_ms(6_u16);
+        LongFi::enable_tcxo();
+
+        reset.set_low();
+
+        delay.delay_ms(1_u16);
 
         reset.set_high();
 
@@ -132,7 +144,9 @@ const APP: () = {
             }
         );
         LongFi::set_buffer(resources.BUFFER);
-        LongFi::set_rx();
+
+        let packet: [u8; 5] = [0xDE, 0xAD, 0xBE, 0xEF, 0];
+        LongFi::send(&packet, packet.len());
 
         // Return the initialised resources.
         init::LateResources {

@@ -18,6 +18,7 @@ struct RfConfig {
 	uint32_t network_poll; // even w/o data, protocol could be configured to poll the network periodically
 };
 
+void helium_enable_tcxo();
 void helium_rf_init(struct RfConfig config);
 
 typedef enum ClientEvent {

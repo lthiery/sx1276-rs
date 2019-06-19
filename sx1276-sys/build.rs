@@ -47,6 +47,7 @@ fn main() {
        .whitelist_type("QualityOfService")
        .whitelist_type("RfConfig")
        .whitelist_type("RxPacket")
+       .whitelist_function("helium_enable_tcxo")
        .whitelist_function("helium_rf_init")
        .whitelist_function("helium_rf_handle_event")
        .whitelist_function("helium_ping")

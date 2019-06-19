@@ -86,7 +86,16 @@ void OnRxError( void );
  */
 ClientEvent _handle_internal_event(InternalEvent_t event);
 
+
+void helium_enable_tcxo(){
+  SX1276Write( REG_OCP, ( RF_OCP_ON | RF_OCP_TRIM_120_MA ) );
+  SX1276Write( REG_TCXO, ( SX1276Read( REG_TCXO ) & RF_TCXO_TCXOINPUT_MASK ) | RF_TCXO_TCXOINPUT_ON );
+  SX1276Write( REG_OPMODE, ( SX1276Read( REG_OPMODE ) & RF_OPMODE_MASK ) | RF_OPMODE_SLEEP );
+}
+
 void helium_rf_init(struct RfConfig config) {
+
+
   // save config in static struct
   LongFi.config = config;
 

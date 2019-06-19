@@ -11,6 +11,12 @@ pub struct LongFi;
 
 impl LongFi{
 
+	pub fn enable_tcxo() {
+		unsafe{
+			sx1276_sys::helium_enable_tcxo();
+		}
+	}
+
 
 	pub fn initialize(config: RfConfig) {
 		unsafe{
