@@ -598,7 +598,7 @@ void SX1276SetTxConfig( RadioModems_t modem, int8_t power, uint32_t fdev,
     SX1276Write(REG_LNA, 0x23);
 
     //PaDac 20dBm on PA_BOOST
-    SX1276Write(REG_PADAC, 0x9F);
+    SX1276Write(REG_PADAC, 0xBF);
     
     //Set RegOcp 240ma
     SX1276Write(REG_OCP, 0x3B);
