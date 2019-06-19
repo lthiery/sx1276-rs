@@ -551,46 +551,57 @@ void SX1276SetTxConfig( RadioModems_t modem, int8_t power, uint32_t fdev,
                         bool fixLen, bool crcOn, bool freqHopOn,
                         uint8_t hopPeriod, bool iqInverted, uint32_t timeout )
 {
-    uint8_t paConfig, paDac;
+    // uint8_t paConfig, paDac;
 
-    if( power < -4 )
-    {
-        power = -4;
-    }
-    if( power > 20 )
-    {
-        power = 20;
-    }
+    // if( power < -4 )
+    // {
+    //     power = -4;
+    // }
+    // if( power > 20 )
+    // {
+    //     power = 20;
+    // }
 
-    if( power > 15 )
-    {
-        if( power > 17 )
-        {
-            paConfig = ( RF_PACONFIG_PASELECT_PABOOST | ( power - 5 ) );
-            paDac = RF_PADAC_20DBM_ON;
-        }
-        else
-        {
-            paConfig = ( RF_PACONFIG_PASELECT_PABOOST | ( power - 2 ) );
-            paDac = RF_PADAC_20DBM_OFF;
-        }
-    }
-    else
-    {
-        if( power > 0 )
-        {
-            paConfig = ( RF_PACONFIG_PASELECT_RFO | ( 7 << 4 ) | ( power ) );
-            paDac = RF_PADAC_20DBM_OFF;
-        }
-        else
-        {
-            paConfig = ( RF_PACONFIG_PASELECT_RFO | ( 0 << 4 ) | ( power + 4 ) );
-            paDac = RF_PADAC_20DBM_OFF;
-        }
-    }
+    // if( power > 15 )
+    // {
+    //     if( power > 17 )
+    //     {
+    //         paConfig = ( RF_PACONFIG_PASELECT_PABOOST | ( power - 5 ) );
+    //         paDac = RF_PADAC_20DBM_ON;
+    //     }
+    //     else
+    //     {
+    //         paConfig = ( RF_PACONFIG_PASELECT_PABOOST | ( power - 2 ) );
+    //         paDac = RF_PADAC_20DBM_OFF;
+    //     }
+    // }
+    // else
+    // {
+    //     if( power > 0 )
+    //     {
+    //         paConfig = ( RF_PACONFIG_PASELECT_RFO | ( 7 << 4 ) | ( power ) );
+    //         paDac = RF_PADAC_20DBM_OFF;
+    //     }
+    //     else
+    //     {
+    //         paConfig = ( RF_PACONFIG_PASELECT_RFO | ( 0 << 4 ) | ( power + 4 ) );
+    //         paDac = RF_PADAC_20DBM_OFF;
+    //     }
+    // }
 
-    SX1276Write( REG_PACONFIG, paConfig );
+    // SX1276Write( REG_PACONFIG, paConfig );
 
+    //Pa maximum power
+    SX1276Write(REG_PACONFIG, 0xFF);
+    
+    //150% LNA current & maximum gain
+    SX1276Write(REG_LNA, 0x23);
+
+    //PaDac 20dBm on PA_BOOST
+    SX1276Write(REG_PADAC, 0x87);
+    
+    //Set RegOcp 240ma
+    SX1276Write(REG_OCP, 0x3B);
 
     switch( modem )
     {
