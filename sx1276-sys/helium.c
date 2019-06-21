@@ -264,7 +264,7 @@ void OnTxDone( void )
 void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
   LongFi.cur_event = InternalEvent_RxDone;
-  uint8_t rx_len = (uint8_t) MIN( (uint32_t) size, LongFi.buffer_len);
+  uint8_t rx_len = (uint8_t) MIN( (size_t) size, LongFi.buffer_len);
   LongFi.rx_len = rx_len;
   memcpy(LongFi.buffer, payload, rx_len);
   RssiValue = rssi;
