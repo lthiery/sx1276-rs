@@ -9,8 +9,34 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+// [[radios]]
+// id = 0
+// type = 'SX1257'
+// freq = 916_600_000
+// rssi_offset = -169.0
+// tx_enable = true
 
-#define RF_FREQUENCY                                916600000 // Hz //911_000_000 - 400_000
+// [[radios]]
+// id = 1
+// type = 'SX1257'
+// freq = 920_600_000
+// rssi_offset = -169.0
+// tx_enable = false
+
+#define RADIO_1                                     916600000 // Hz //911_000_000 - 400_000
+#define RADIO_2                                     920600000 // Hz //911_000_000 - 400_000
+#define FREQ_SPACING                                   200000
+const uint32_t frequency_table[8] = {
+  RADIO_1 - FREQ_SPACING*2,
+  RADIO_1 - FREQ_SPACING,
+  RADIO_1,
+  RADIO_2 - FREQ_SPACING*2,
+  RADIO_2 - FREQ_SPACING,
+  RADIO_2,
+  RADIO_2 + FREQ_SPACING,
+  RADIO_2 + FREQ_SPACING*2
+};
+
 #define TX_OUTPUT_POWER                             22        // dBm
 
 #define LORA_BANDWIDTH                              0         // [0: 125 kHz,
@@ -108,7 +134,7 @@ void helium_rf_init(struct RfConfig config) {
   // this function calls TimerInits and SX1276IoIrqInit, which are implemented here
   SX1276Init( &LongFi.radio_events );
 
-  SX1276SetChannel( RF_FREQUENCY );
+  SX1276SetChannel( frequency_table[0] );
 
   SX1276SetTxConfig( MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
                                  LORA_SPREADING_FACTOR, LORA_CODINGRATE,
