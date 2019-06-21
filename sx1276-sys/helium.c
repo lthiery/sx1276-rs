@@ -185,34 +185,6 @@ RxPacket helium_get_rx(){
   return rx;
 }
 
-void helium_ping(){
-  Buffer[0] = 'P';
-  Buffer[1] = 'I';
-  Buffer[2] = 'N';
-  Buffer[3] = 'G';
-
-  // We fill the buffer with numbers for the payload 
-  for(uint8_t i = 4; i < BufferSize; i++ )
-  {
-    Buffer[i] = i - 4;
-  }
-  SX1276Send( Buffer, BufferSize );
-}
-
-void helium_pong(){
-  Buffer[0] = 'P';
-  Buffer[1] = 'I';
-  Buffer[2] = 'N';
-  Buffer[3] = 'G';
-
-  // We fill the buffer with numbers for the payload 
-  for(uint8_t i = 4; i < BufferSize; i++ )
-  {
-    Buffer[i] = i - 4;
-  }
-  SX1276Send( Buffer, BufferSize );
-}
-
 ClientEvent helium_rf_handle_event(RfEvent event){
 
   LongFi.cur_event = InternalEvent_None;
