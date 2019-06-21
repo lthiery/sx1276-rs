@@ -17,7 +17,6 @@ impl LongFi{
 		}
 	}
 
-
 	pub fn initialize(config: RfConfig) {
 		unsafe{
 			sx1276_sys::helium_rf_init(config);
@@ -62,18 +61,5 @@ impl LongFi{
 		}
 		
 	}
-
-	pub fn send_ping() {
-		unsafe {
-			sx1276_sys::helium_ping();
-		}
-	}
-
-	pub fn send_pong() {
-		unsafe {
-			sx1276_sys::helium_pong();
-		}
-	}
-
 }
 

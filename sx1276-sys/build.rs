@@ -50,8 +50,6 @@ fn main() {
        .whitelist_function("helium_enable_tcxo")
        .whitelist_function("helium_rf_init")
        .whitelist_function("helium_rf_handle_event")
-       .whitelist_function("helium_ping")
-       .whitelist_function("helium_pong")
        .whitelist_function("helium_send")
        .whitelist_function("helium_get_rx")
        .whitelist_function("helium_set_buf")
