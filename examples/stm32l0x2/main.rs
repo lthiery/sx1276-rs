@@ -204,6 +204,11 @@ const APP: () = {
     fn send_ping(){
         write!(resources.DEBUG_UART, "Sending Ping\r\n").unwrap();
         let packet: [u8; 5] = [0xDE, 0xAD, 0xBE, 0xEF, *resources.COUNT];
+
+
+        let toa = unsafe { 
+            sx1276_sys::SX1276GetTimeOnAir(1, packet.len() as u8)
+        };
         *resources.COUNT+=1;
         LongFi::send(&packet, packet.len());
     }
