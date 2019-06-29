@@ -150,6 +150,8 @@ const APP: () = {
                 always_on: true,
                 qos: QualityOfService::QOS_0,
                 network_poll: 0,
+                oui: 0xDEADBEEF,
+                device_id: 0x1234,
             }
         );
         LongFi::set_buffer(resources.BUFFER);
@@ -185,9 +187,7 @@ const APP: () = {
                 write!(resources.DEBUG_UART, "  Snr    =  {}\r\n", rx_packet.snr).unwrap();
                 unsafe {
                     for i in 0..rx_packet.len {
-                        
                             write!(resources.DEBUG_UART, "{:X} ", *rx_packet.buf.offset(i as isize)).unwrap();
-                        
                     }
                     write!(resources.DEBUG_UART, "\r\n").unwrap();
                 }
@@ -204,11 +204,6 @@ const APP: () = {
     fn send_ping(){
         write!(resources.DEBUG_UART, "Sending Ping\r\n").unwrap();
         let packet: [u8; 5] = [0xDE, 0xAD, 0xBE, 0xEF, *resources.COUNT];
-
-
-        let toa = unsafe { 
-            sx1276_sys::SX1276GetTimeOnAir(1, packet.len() as u8)
-        };
         *resources.COUNT+=1;
         LongFi::send(&packet, packet.len());
     }

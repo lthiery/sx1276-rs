@@ -16,6 +16,8 @@ struct RfConfig {
 	// or be able to asyncronously rx at anytime (this would be Class A vs Class B in LoRa or something)
 	QualityOfService qos;
 	uint32_t network_poll; // even w/o data, protocol could be configured to poll the network periodically
+	uint32_t oui;
+	uint16_t device_id;
 };
 
 void helium_enable_tcxo();

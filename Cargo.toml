@@ -9,6 +9,7 @@ features = ["stm32l0x2", "rt"]
 
 [dependencies]
 sx1276-sys = {path = "./sx1276-sys"}
+libm = "0.1.4"
 
 [[example]]
 name = "stm32l0x2"

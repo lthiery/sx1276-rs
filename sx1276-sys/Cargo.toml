@@ -10,3 +10,4 @@ bindgen = {version="=0.49.0", default-features = false }
 
 [dependencies]
 cty =  "0.2"
+libm = "0.1.4"
