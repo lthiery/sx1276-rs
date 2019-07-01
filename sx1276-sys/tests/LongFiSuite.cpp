@@ -1,23 +1,80 @@
 #include <CppUTest/TestHarness.h>
 
 #include "../helium.h"
+#include "../heliumP.h"
 
-uint8_t test_data[] = {0xDE, 0xAD, 0xBE, 0xEF};
+struct RfConfig rf_config = {
+    .always_on = false,
+    .qos = QOS_0,
+    .network_poll = 1000,
+    .oui = 0xFEED3EAB,
+    .device_id = 0xABCD,
+};
 
 
 TEST_GROUP(LongFiGroup)
 {
+    void setup()
+   {
+      helium_rf_init(rf_config);
+   }
+
+   void teardown()
+   {
+      
+   }
+
 };
 
-TEST(LongFiGroup, FirstTest)
+TEST(LongFiGroup, PayloadBytesInFirstFragment)
 {
-    helium_send(test_data, 4);
-    LONGS_EQUAL(1, 2);
+    UNSIGNED_LONGS_EQUAL(24, payload_bytes_in_first_fragment());
+}
+
+TEST(LongFiGroup, PayloadBytesInSubsequentFragments)
+{
+
+    UNSIGNED_LONGS_EQUAL(30, payload_bytes_in_subsequent_fragments());
+}
+
+
+uint8_t send_length = 0;
+uint8_t * send_buffer = 0;
+
+TEST(LongFiGroup, SingleFragmentPacket)
+{
+    uint8_t test_data[] = {0xDE, 0xAD, 0xBE, 0xEF};
+    helium_send(test_data, sizeof(test_data));
+    
+    // assert that the packet sent is equal to test_data plus packet_header
+    LONGS_EQUAL(
+        (sizeof(test_data) + sizeof(packet_header_t)),
+        send_length
+    );
+
+    uint8_t control_data[] = {
+        // OUI (little E)
+        0xAB, 0x3E, 0xED, 0xFE, 
+        // device ID (little E)
+        0xCD, 0xAB, 
+        // packet ID 
+        0x0, 
+        // fragment number
+        0x00, 
+        // payload
+        0xDE, 0xAD, 0xBE, 0xEF
+    };
+
+
+    for(uint i=0; i<send_length; i++){
+        BYTES_EQUAL(control_data[i], send_buffer[i]);
+    }
 }
 
 #include "../board.h"
 #include "../radio/radio.h"
 #include "../radio/sx1276/sx1276.h"
+#include <cstdio>
 
 extern "C" {
     void SX1276Write( uint8_t addr, uint8_t data ){
@@ -57,6 +114,14 @@ extern "C" {
     }
 
     void SX1276Send( uint8_t *buffer, uint8_t size ){
+        send_length = size;
+        send_buffer = buffer;
 
+        // debug prints
+        // printf("\r\n");
+        // for (int i = 0; i < size; i++){
+        //     printf("%x ", buffer[i]);
+        // }
+        // printf("\r\n");
     }
 }

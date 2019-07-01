@@ -1,10 +1,11 @@
-
+#ifndef __LONGFI_H__
+#define __LONGFI_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-	#include <stdint.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -71,6 +72,10 @@ ClientEvent helium_rf_handle_event(RfEvent);
 void helium_ping();
 void helium_pong();
 
+
+
 #ifdef __cplusplus
 }
 #endif
+
+#endif // __SX1276_H__
