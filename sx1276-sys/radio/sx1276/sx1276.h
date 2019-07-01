@@ -15,6 +15,10 @@ Maintainer: Miguel Luis and Gregory Cristian
 #ifndef __SX1276_H__
 #define __SX1276_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "sx1276Regs-Fsk.h"
 #include "sx1276Regs-LoRa.h"
 
@@ -381,5 +385,9 @@ void SX1276ReadBuffer( uint8_t addr, uint8_t *buffer, uint8_t size );
  * \param [IN] max        Maximum payload length in bytes
  */
 void SX1276SetMaxPayloadLength( RadioModems_t modem, uint8_t max );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __SX1276_H__

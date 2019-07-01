@@ -301,6 +301,8 @@ ClientEvent helium_rf_handle_event(RfEvent event){
     case Timer3:
       // TODO: needs to dispatch the callback stashed from TimerInit
       break;
+    default:
+      break;
   }
 
   return _handle_internal_event(LongFi.cur_event);
@@ -328,6 +330,8 @@ ClientEvent _handle_internal_event(InternalEvent_t event){
       break;
     case InternalEvent_RxError:
       // potential internal retry logic
+      break;
+    default:
       break;
   }
   return ClientEvent_None;

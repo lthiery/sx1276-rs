@@ -4,3 +4,8 @@ Cargo.lock
 *.hex
 *.bin
 
+# ignore all the test tooling
+sx1276-sys/autom4te.cache/
+sx1276-sys/configure
+sx1276-sys/test-lib/
+sx1276-sys/test-obj/

@@ -1,7 +1,12 @@
-#include <stdint.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+	#include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
-
 
 // I'm calling "mail" downstream packets
 // Presumably, our RF ACK provide a bit-flag notice about mail being available
@@ -65,3 +70,7 @@ ClientEvent helium_rf_handle_event(RfEvent);
 
 void helium_ping();
 void helium_pong();
+
+#ifdef __cplusplus
+}
+#endif
