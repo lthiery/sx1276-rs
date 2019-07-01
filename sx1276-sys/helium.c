@@ -91,6 +91,12 @@ size_t payload_bytes_in_subsequent_fragments(){
   return payload_per_fragment[LongFi.spreading_factor] - sizeof(fragment_header_t);
 }
 
+void _send_random(uint8_t * data, size_t len){
+  uint32_t random = SX1276Random();
+  SX1276SetChannel(frequency_table[random%LONGFI_NUM_UPLINK_CHANNELS] );
+  SX1276Send(data, len);
+}
+
 
 void helium_send(const uint8_t * data, size_t len){
   uint32_t num_fragments;
@@ -141,7 +147,7 @@ void helium_send(const uint8_t * data, size_t len){
   };
 
   LongFi.tx_cnt = sizeof(packet_header_t) + MIN(len, payload_bytes_in_first_fragment());
-  SX1276Send(Buffer, LongFi.tx_cnt);
+  _send_random(Buffer, LongFi.tx_cnt);
 }
 
 RxPacket helium_get_rx(){
@@ -210,7 +216,7 @@ ClientEvent _handle_internal_event(InternalEvent_t event){
           payload_per_fragment[LongFi.spreading_factor],
           LongFi.tx_len - LongFi.tx_cnt
         );
-        SX1276Send(&Buffer[LongFi.tx_cnt], len);
+        _send_random(&Buffer[LongFi.tx_cnt], len);
         LongFi.tx_cnt += len;
         return ClientEvent_None;
       }      

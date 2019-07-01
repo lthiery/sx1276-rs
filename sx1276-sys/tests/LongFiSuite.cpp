@@ -168,6 +168,10 @@ extern "C" {
         return 0;
     }
 
+    uint32_t SX1276Random( void ){
+        return 3129312;
+    }
+
     void SX1276SetChannel( uint32_t freq ){
 
     }

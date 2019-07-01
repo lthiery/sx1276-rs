@@ -8,11 +8,12 @@ extern "C" {
 #endif
 
 
-#define RADIO_1                                     916600000 // Hz //911_000_000 - 400_000
-#define RADIO_2                                     920600000 // Hz //911_000_000 - 400_000
+#define RADIO_1                                     916600000
+#define RADIO_2                                     920600000
 #define FREQ_SPACING                                   200000
+#define LONGFI_NUM_UPLINK_CHANNELS                          8
 
-const uint32_t frequency_table[8] = {
+const uint32_t frequency_table[LONGFI_NUM_UPLINK_CHANNELS] = {
   RADIO_1 - FREQ_SPACING*2,
   RADIO_1 - FREQ_SPACING,
   RADIO_1,
