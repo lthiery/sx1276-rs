@@ -26,8 +26,6 @@ void helium_enable_tcxo(){
 }
 
 void helium_rf_init(struct RfConfig config) {
-
-
   // save config in static struct
   LongFi.config = config;
 
@@ -44,7 +42,6 @@ void helium_rf_init(struct RfConfig config) {
     default:
     LongFi.spreading_factor = 2;
   }
-  
 
   // configure sx1276 radio events with local helium functions
   LongFi.radio_events.TxDone = OnTxDone;
@@ -97,6 +94,7 @@ size_t payload_bytes_in_subsequent_fragments(){
 
 void helium_send(const uint8_t * data, size_t len){
   uint32_t num_fragments;
+  size_t payload_consumed = 0;
   if (len < payload_bytes_in_first_fragment()){
     num_fragments = 1;
   } else {
@@ -127,6 +125,7 @@ void helium_send(const uint8_t * data, size_t len){
   size_t num_bytes_copy = MIN(len, payload_bytes_in_first_fragment());
   memcpy(&Buffer[LongFi.tx_len], data, num_bytes_copy);
   LongFi.tx_len += num_bytes_copy;
+  payload_consumed += num_bytes_copy;
 
   for(uint32_t cnt_fragments = 1; cnt_fragments < num_fragments; cnt_fragments++) {
     fragment_header_t fheader  = {
@@ -135,9 +134,10 @@ void helium_send(const uint8_t * data, size_t len){
     };
     memcpy(&Buffer[LongFi.tx_len], &fheader, sizeof(fragment_header_t));
     LongFi.tx_len += sizeof(fragment_header_t);
-    num_bytes_copy = MIN(len, payload_bytes_in_subsequent_fragments());
-    memcpy(&Buffer[LongFi.tx_len], data, num_bytes_copy);
+    num_bytes_copy = MIN(len - payload_consumed, payload_bytes_in_subsequent_fragments());
+    memcpy(&Buffer[LongFi.tx_len], &data[payload_consumed], num_bytes_copy);
     LongFi.tx_len += num_bytes_copy;
+    payload_consumed+= num_bytes_copy;
   };
 
   LongFi.tx_cnt = sizeof(packet_header_t) + MIN(len, payload_bytes_in_first_fragment());
@@ -203,7 +203,17 @@ ClientEvent _handle_internal_event(InternalEvent_t event){
       break;
     case InternalEvent_TxDone:
       // could trigger pending Tx'es here
-      return ClientEvent_TxDone;
+      if (LongFi.tx_len == LongFi.tx_cnt){
+        return ClientEvent_TxDone;
+      } else {
+        uint8_t len = MIN(
+          payload_per_fragment[LongFi.spreading_factor],
+          LongFi.tx_len - LongFi.tx_cnt
+        );
+        SX1276Send(&Buffer[LongFi.tx_cnt], len);
+        LongFi.tx_cnt += len;
+        return ClientEvent_None;
+      }      
       break;
     case InternalEvent_RxDone:
       // could trigger pending Tx'es here

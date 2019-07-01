@@ -85,7 +85,7 @@ TEST(LongFiGroup, MultipleFragmentPacket)
         send_length
     );
 
-    uint8_t control_data[] = {
+    uint8_t control_data1[] = {
         // OUI (little E)
         0xAB, 0x3E, 0xED, 0xFE, 
         // device ID (little E)
@@ -97,12 +97,33 @@ TEST(LongFiGroup, MultipleFragmentPacket)
         // payload
         0xDE, 0xAD, 0xBE, 0xEF, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
         0x07, 0x08, 0x09, 0x0a, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 
-        0x19, 0x20
+        0x19
     };
 
 
     for(uint i=0; i<send_length; i++){
-        BYTES_EQUAL(control_data[i], send_buffer[i]);
+        BYTES_EQUAL(control_data1[i], send_buffer[i]);
+    }
+    // push an event into the driver
+    helium_rf_handle_event(DIO0);
+
+    uint8_t control_data2[] = {
+        // packet ID 
+        0xAB, 
+        // fragment number
+        0x01, 
+        // payload
+        0x20
+    };
+
+    // first packet is 32 bytes
+    LONGS_EQUAL(
+        sizeof(fragment_header_t) + 1,
+        send_length
+    );
+
+    for(uint i=0; i<send_length; i++){
+        BYTES_EQUAL(control_data2[i], send_buffer[i]);
     }
 }
 
@@ -112,6 +133,34 @@ TEST(LongFiGroup, MultipleFragmentPacket)
 #include <cstdio>
 
 extern "C" {
+
+    static RadioEvents_t *RadioEvents;
+
+    void TestOnDio0Irq(void){
+        RadioEvents->TxDone();
+    }
+    void TestOnDio1Irq(void){
+
+    }
+    void TestOnDio2Irq(void){
+
+    }
+    void TestOnDio3Irq(void){
+
+    }
+    void TestOnDio4Irq(void){
+
+    }
+
+    void TestOnDio5Irq( void ){
+        FAIL("dio5 should not fire!");
+    }
+
+
+    DioIrqHandler *DioIrq[] = { TestOnDio0Irq, TestOnDio1Irq,
+                                TestOnDio2Irq, TestOnDio3Irq,
+                                TestOnDio4Irq, TestOnDio5Irq };
+
     void SX1276Write( uint8_t addr, uint8_t data ){
     }
 
@@ -124,6 +173,9 @@ extern "C" {
     }
 
     void SX1276Init( RadioEvents_t *events ){
+        RadioEvents = events;
+        SX1276IoIrqInit(DioIrq);
+
     }
 
     void SX1276SetTxConfig( RadioModems_t modem, int8_t power, uint32_t fdev, 
@@ -153,10 +205,10 @@ extern "C" {
         send_buffer = buffer;
 
         // debug prints
-        printf("\r\n");
-        for (int i = 0; i < size; i++){
-            printf("%x ", buffer[i]);
-        }
-        printf("\r\n");
+        // printf("\r\n");
+        // for (int i = 0; i < size; i++){
+        //     printf("%x ", buffer[i]);
+        // }
+        // printf("\r\n");
     }
 }
