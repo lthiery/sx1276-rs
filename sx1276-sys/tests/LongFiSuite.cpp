@@ -71,6 +71,41 @@ TEST(LongFiGroup, SingleFragmentPacket)
     }
 }
 
+TEST(LongFiGroup, MultipleFragmentPacket)
+{
+    uint8_t test_data[] = {0xDE, 0xAD, 0xBE, 0xEF, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+        0x07, 0x08, 0x09, 0x0a, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 
+        0x19, 0x20};
+
+    helium_send(test_data, sizeof(test_data));
+    
+    // first packet is 32 bytes
+    LONGS_EQUAL(
+        32,
+        send_length
+    );
+
+    uint8_t control_data[] = {
+        // OUI (little E)
+        0xAB, 0x3E, 0xED, 0xFE, 
+        // device ID (little E)
+        0xCD, 0xAB, 
+        // packet ID 
+        0xAB, 
+        // fragment number
+        0x00, 
+        // payload
+        0xDE, 0xAD, 0xBE, 0xEF, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+        0x07, 0x08, 0x09, 0x0a, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 
+        0x19, 0x20
+    };
+
+
+    for(uint i=0; i<send_length; i++){
+        BYTES_EQUAL(control_data[i], send_buffer[i]);
+    }
+}
+
 #include "../board.h"
 #include "../radio/radio.h"
 #include "../radio/sx1276/sx1276.h"
@@ -118,10 +153,10 @@ extern "C" {
         send_buffer = buffer;
 
         // debug prints
-        // printf("\r\n");
-        // for (int i = 0; i < size; i++){
-        //     printf("%x ", buffer[i]);
-        // }
-        // printf("\r\n");
+        printf("\r\n");
+        for (int i = 0; i < size; i++){
+            printf("%x ", buffer[i]);
+        }
+        printf("\r\n");
     }
 }

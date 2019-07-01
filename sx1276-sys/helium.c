@@ -133,10 +133,10 @@ void helium_send(const uint8_t * data, size_t len){
       .packet_id = pheader.packet_id,
       .packet_num = cnt_fragments,
     };
-    memcpy(&Buffer[num_bytes_copy], &fheader, sizeof(fragment_header_t));
+    memcpy(&Buffer[LongFi.tx_len], &fheader, sizeof(fragment_header_t));
     LongFi.tx_len += sizeof(fragment_header_t);
     num_bytes_copy = MIN(len, payload_bytes_in_subsequent_fragments());
-    memcpy(&Buffer[num_bytes_copy], data, num_bytes_copy);
+    memcpy(&Buffer[LongFi.tx_len], data, num_bytes_copy);
     LongFi.tx_len += num_bytes_copy;
   };
 
