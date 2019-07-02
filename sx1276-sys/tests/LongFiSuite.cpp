@@ -26,15 +26,22 @@ TEST_GROUP(LongFiGroup)
 
 };
 
-TEST(LongFiGroup, PayloadBytesInFirstFragment)
+
+TEST(LongFiGroup, PayloadBytesInSingleFragmentPacket)
 {
-    UNSIGNED_LONGS_EQUAL(24, payload_bytes_in_first_fragment());
+    UNSIGNED_LONGS_EQUAL(23, payload_bytes_in_single_fragment_packet());
+}
+
+
+TEST(LongFiGroup, PayloadBytesInFirstFragmentOfMany)
+{
+    UNSIGNED_LONGS_EQUAL(21, payload_bytes_in_first_fragment_of_many());
 }
 
 TEST(LongFiGroup, PayloadBytesInSubsequentFragments)
 {
 
-    UNSIGNED_LONGS_EQUAL(30, payload_bytes_in_subsequent_fragments());
+    UNSIGNED_LONGS_EQUAL(28, payload_bytes_in_subsequent_fragments());
 }
 
 
@@ -57,10 +64,10 @@ TEST(LongFiGroup, SingleFragmentPacket)
         0xAB, 0x3E, 0xED, 0xFE, 
         // device ID (little E)
         0xCD, 0xAB, 
-        // packet ID 
-        0x0, 
-        // fragment number
+        // packet ID is 0 when there are no fragments 
         0x00, 
+        // MAC
+        0xFE, 0xEF,
         // payload
         0xDE, 0xAD, 0xBE, 0xEF
     };
@@ -91,34 +98,40 @@ TEST(LongFiGroup, MultipleFragmentPacket)
         // device ID (little E)
         0xCD, 0xAB, 
         // packet ID 
-        0xAB, 
+        0xE0, 
         // fragment number
-        0x00, 
+        0x00,
+        // num fragments 
+        0x02,
+        // MAC
+        0xFE, 0xEF,
         // payload
         0xDE, 0xAD, 0xBE, 0xEF, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
-        0x07, 0x08, 0x09, 0x0a, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 
-        0x19
+        0x07, 0x08, 0x09, 0x0a, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 
     };
 
-
     for(uint i=0; i<send_length; i++){
-        BYTES_EQUAL(control_data1[i], send_buffer[i]);
+        if (i!= 6) {
+            BYTES_EQUAL(control_data1[i], send_buffer[i]);
+        }
     }
     // push an event into the driver
     helium_rf_handle_event(DIO0);
 
     uint8_t control_data2[] = {
         // packet ID 
-        0xAB, 
+        0xE0, 
         // fragment number
         0x01, 
+        // MAC
+        0xFE, 0xEF,
         // payload
-        0x20
+        0x17, 0x18, 0x19, 0x20
     };
 
     // first packet is 32 bytes
     LONGS_EQUAL(
-        sizeof(fragment_header_t) + 1,
+        sizeof(fragment_header_t) + 4,
         send_length
     );
 
@@ -169,7 +182,7 @@ extern "C" {
     }
 
     uint32_t SX1276Random( void ){
-        return 3129312;
+        return 0xE0;
     }
 
     void SX1276SetChannel( uint32_t freq ){
@@ -209,10 +222,10 @@ extern "C" {
         send_buffer = buffer;
 
         // debug prints
-        // printf("\r\n");
-        // for (int i = 0; i < size; i++){
-        //     printf("%x ", buffer[i]);
-        // }
-        // printf("\r\n");
+        printf("\r\n");
+        for (int i = 0; i < size; i++){
+            printf("%x ", buffer[i]);
+        }
+        printf("\r\n");
     }
 }

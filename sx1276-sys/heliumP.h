@@ -79,16 +79,29 @@ typedef struct {
   uint32_t tx_len;
 } LongFi_t;
 
+#pragma pack(push, 1)
 typedef struct {
   uint32_t oui;
   uint16_t device_id;
   uint8_t packet_id;
+  uint16_t mac;
 } packet_header_t;
+
+typedef struct {
+  uint32_t oui;
+  uint16_t device_id;
+  uint8_t packet_id;
+  uint8_t fragment_num;
+  uint8_t num_fragments;
+  uint16_t mac;
+} packet_header_multiple_fragments_t;
 
 typedef struct {
   uint8_t packet_id;
   uint8_t packet_num;
+  uint16_t mac;
 } fragment_header_t;
+#pragma pack(pop)
 
 #define RX_TIMEOUT_VALUE                            1000
 #define BUFFER_SIZE                                 64 // Define the payload size here
@@ -115,8 +128,11 @@ ClientEvent _handle_internal_event(InternalEvent_t event);
 /*
  * Private helper for counting bytes
  */
-size_t payload_bytes_in_first_fragment();
+size_t payload_bytes_in_single_fragment_packet();
+size_t payload_bytes_in_first_fragment_of_many();
 size_t payload_bytes_in_subsequent_fragments();
+
+
 
 #ifdef __cplusplus
 }

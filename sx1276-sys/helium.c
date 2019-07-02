@@ -81,9 +81,15 @@ void helium_rx(){
     (void) (&_x == &_y);    \
     _x < _y ? _x : _y; })
 
+
 // number of bytes in a fragment
-size_t payload_bytes_in_first_fragment(){
+size_t payload_bytes_in_single_fragment_packet(){
   return payload_per_fragment[LongFi.spreading_factor] - sizeof(packet_header_t);
+}
+
+// number of bytes in a fragment
+size_t payload_bytes_in_first_fragment_of_many(){
+  return payload_per_fragment[LongFi.spreading_factor] - sizeof(packet_header_multiple_fragments_t);
 }
 
 // number of bytes in a fragment
@@ -102,10 +108,13 @@ void _send_random(uint8_t * data, size_t len){
 void helium_send(const uint8_t * data, size_t len){
   uint32_t num_fragments;
   size_t payload_consumed = 0;
-  if (len < payload_bytes_in_first_fragment()){
+  uint8_t packet_id = 0;
+  size_t num_bytes_copy;
+
+  if (len < payload_bytes_in_single_fragment_packet()){
     num_fragments = 1;
   } else {
-    uint32_t remaining_len = len - payload_bytes_in_first_fragment();
+    uint32_t remaining_len = len - payload_bytes_in_first_fragment_of_many();
     num_fragments = 1 + remaining_len / payload_bytes_in_subsequent_fragments();
 
     // if there was remainder, we need a final fragment
@@ -114,31 +123,46 @@ void helium_send(const uint8_t * data, size_t len){
     }
   }
 
-  packet_header_t pheader  = {
-    .oui = LongFi.config.oui,
-    .device_id = LongFi.config.device_id,
-    .packet_id = 0, //default to packet id=0 which means no fragments
-  };
+  // copy in short header for single fragment packets
+  if (num_fragments <= 1) {
+    packet_header_t pheader  = {
+      .oui = LongFi.config.oui,
+      .device_id = LongFi.config.device_id,
+      .packet_id = 0, //packet_id means no fragments
+      .mac = 0xEFFE,
+    };
+    memcpy(Buffer, &pheader, sizeof(packet_header_t));
+    num_bytes_copy = MIN(len, payload_bytes_in_single_fragment_packet());
+    LongFi.tx_len = sizeof(packet_header_t);
+  } else {
+    packet_id = (uint8_t) SX1276Random();
 
-  if (num_fragments > 1) {
-    uint32_t random = SX1276Random();
-    // TODO: randomly create header
-    pheader.packet_id = 0xab;//(uint8_t) random;
-  };
+    packet_header_multiple_fragments_t pheader  = {
+      .oui = LongFi.config.oui,
+      .device_id = LongFi.config.device_id,
+      .packet_id = packet_id, //default to packet id=0 which means no fragments
+      .fragment_num = 0x00,
+      .num_fragments = num_fragments,
+      .mac = 0xEFFE,
+    };
+    memcpy(Buffer, &pheader, sizeof(packet_header_multiple_fragments_t));
+    num_bytes_copy = MIN(len, payload_bytes_in_first_fragment_of_many());
+    LongFi.tx_len = sizeof(packet_header_multiple_fragments_t);
+  }
 
-  // copy into first fragment
-  LongFi.tx_len = 0;
-  memcpy(Buffer, &pheader, sizeof(packet_header_t));
-  LongFi.tx_len += sizeof(packet_header_t);
-  size_t num_bytes_copy = MIN(len, payload_bytes_in_first_fragment());
+  // copy the necessary amount of payload  
   memcpy(&Buffer[LongFi.tx_len], data, num_bytes_copy);
-  LongFi.tx_len += num_bytes_copy;
   payload_consumed += num_bytes_copy;
+  LongFi.tx_len += num_bytes_copy;
+  // initialize tx_cnt with current len, as first transmit will be this
+  LongFi.tx_cnt = LongFi.tx_len;
+
 
   for(uint32_t cnt_fragments = 1; cnt_fragments < num_fragments; cnt_fragments++) {
     fragment_header_t fheader  = {
-      .packet_id = pheader.packet_id,
+      .packet_id = packet_id,
       .packet_num = cnt_fragments,
+      .mac = 0xEFFE,
     };
     memcpy(&Buffer[LongFi.tx_len], &fheader, sizeof(fragment_header_t));
     LongFi.tx_len += sizeof(fragment_header_t);
@@ -148,7 +172,6 @@ void helium_send(const uint8_t * data, size_t len){
     payload_consumed+= num_bytes_copy;
   };
 
-  LongFi.tx_cnt = sizeof(packet_header_t) + MIN(len, payload_bytes_in_first_fragment());
   _send_random(Buffer, LongFi.tx_cnt);
 }
 
