@@ -7,9 +7,8 @@
 extern "C" {
 #endif
 
-
-#define RADIO_1                                     916600000
-#define RADIO_2                                     920600000
+#define RADIO_1                                     920600000
+#define RADIO_2                                     916600000
 #define FREQ_SPACING                                   200000
 #define LONGFI_NUM_UPLINK_CHANNELS                          8
 

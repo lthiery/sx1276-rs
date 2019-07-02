@@ -79,8 +79,8 @@ fn main() {
        .rustified_enum("RfEvent")
        .rustified_enum("QualityOfService")
        .derive_copy(false)
+       .derive_debug(false)
        .layout_tests(false)
-       .rustfmt_bindings(false)
        .generate()
        .expect("Failed to generate sx1276 bindings!");
 

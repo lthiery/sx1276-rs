@@ -15,6 +15,7 @@ typedef enum QualityOfService {
 	QOS_0, // YOLO packets out and go to sleep. RX only during network_poll
 	QOS_1, // make best effort to get ACKs, provide client notice of mail being available
 	QOS_2, // make best effort to get ACKs and pull down mail ASAP
+	_MAX = 0xFFFFFFFF
 } QualityOfService;
 
 struct RfConfig {

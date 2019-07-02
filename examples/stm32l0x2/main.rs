@@ -145,14 +145,15 @@ const APP: () = {
 
         reset.set_high();
 
-        LongFi::initialize(
-            RfConfig {
+        let config = RfConfig {
                 always_on: true,
                 qos: QualityOfService::QOS_0,
-                network_poll: 0,
-                oui: 0xDEADBEEF,
-                device_id: 0x1234,
-            }
+                network_poll: 200,
+                oui: 0x12345678,
+                device_id: 0x9abc,
+            };
+
+        LongFi::initialize(config
         );
         LongFi::set_buffer(resources.BUFFER);
 
@@ -194,6 +195,7 @@ const APP: () = {
                 // give buffer back to library
                 LongFi::set_buffer(resources.BUFFER);
             }
+            ClientEvent::ClientEvent_None => {},
             _ => {
                 write!(resources.DEBUG_UART, "Unhandled Client Event\r\n").unwrap();
             },
@@ -203,7 +205,9 @@ const APP: () = {
     #[task(capacity = 4, priority = 2, resources = [DEBUG_UART, COUNT])]
     fn send_ping(){
         write!(resources.DEBUG_UART, "Sending Ping\r\n").unwrap();
-        let packet: [u8; 5] = [0xDE, 0xAD, 0xBE, 0xEF, *resources.COUNT];
+        let packet: [u8; 25] = [0xDE, 0xAD, 0xBE, 0xEF, *resources.COUNT,
+        0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF,
+        0xa1, 0xa2, 0xa3, 0xa4];
         *resources.COUNT+=1;
         LongFi::send(&packet, packet.len());
     }

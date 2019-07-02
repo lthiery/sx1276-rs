@@ -93,6 +93,7 @@ size_t payload_bytes_in_subsequent_fragments(){
 
 void _send_random(uint8_t * data, size_t len){
   uint32_t random = SX1276Random();
+
   SX1276SetChannel(frequency_table[random%LONGFI_NUM_UPLINK_CHANNELS] );
   SX1276Send(data, len);
 }
@@ -115,13 +116,14 @@ void helium_send(const uint8_t * data, size_t len){
 
   packet_header_t pheader  = {
     .oui = LongFi.config.oui,
-    .device_id =  LongFi.config.device_id,
+    .device_id = LongFi.config.device_id,
     .packet_id = 0, //default to packet id=0 which means no fragments
   };
 
   if (num_fragments > 1) {
+    uint32_t random = SX1276Random();
     // TODO: randomly create header
-    pheader.packet_id = 0xAB;
+    pheader.packet_id = 0xab;//(uint8_t) random;
   };
 
   // copy into first fragment
