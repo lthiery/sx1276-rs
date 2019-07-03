@@ -135,12 +135,14 @@ void helium_send(const uint8_t * data, size_t len){
     num_bytes_copy = MIN(len, payload_bytes_in_single_fragment_packet());
     LongFi.tx_len = sizeof(packet_header_t);
   } else {
-    packet_id = (uint8_t) SX1276Random();
-
+    // cannot allow packet_id = 0
+    while (packet_id == 0) {
+      packet_id = (uint8_t) SX1276Random();
+    }
     packet_header_multiple_fragments_t pheader  = {
       .oui = LongFi.config.oui,
       .device_id = LongFi.config.device_id,
-      .packet_id = packet_id, //default to packet id=0 which means no fragments
+      .packet_id = packet_id,
       .fragment_num = 0x00,
       .num_fragments = num_fragments,
       .mac = 0xEFFE,
