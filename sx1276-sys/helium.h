@@ -73,8 +73,7 @@ ClientEvent helium_rf_handle_event(RfEvent);
 void helium_ping();
 void helium_pong();
 
-
-
+void helium_rf_test();
 #ifdef __cplusplus
 }
 #endif

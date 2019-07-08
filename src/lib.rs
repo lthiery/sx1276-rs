@@ -55,6 +55,12 @@ impl LongFi{
 		}
 	}
 
+	pub fn send_test(){
+		unsafe {
+			sx1276_sys::helium_rf_test();
+		}
+	}
+
 	pub fn get_rx() -> RxPacket {
 		unsafe {
 			sx1276_sys::helium_get_rx()

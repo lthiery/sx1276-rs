@@ -53,7 +53,7 @@ fn main() {
        .whitelist_function("helium_send")
        .whitelist_function("helium_get_rx")
        .whitelist_function("helium_set_buf")
-       .whitelist_function("send_rf_test")
+       .whitelist_function("helium_rf_test")
        .whitelist_function("SX1276Init")
        .whitelist_function("SX1276GetStatus")
        .whitelist_function("SX1276SetModem")

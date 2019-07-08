@@ -97,7 +97,7 @@ size_t payload_bytes_in_subsequent_fragments(){
   return payload_per_fragment[LongFi.spreading_factor] - sizeof(fragment_header_t);
 }
 
-void send_rf_test(){
+void helium_rf_test(){
   uint8_t things[255];
   SX1276SetTxConfig( MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
                                  LORA_SPREADING_FACTOR, LORA_CODINGRATE,
