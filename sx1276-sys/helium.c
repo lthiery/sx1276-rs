@@ -100,6 +100,11 @@ size_t payload_bytes_in_subsequent_fragments(){
 void _send_random(uint8_t * data, size_t len){
   uint32_t random = SX1276Random();
 
+  SX1276SetTxConfig( MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
+                                 LORA_SPREADING_FACTOR, LORA_CODINGRATE,
+                                 LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
+                                 true, 0, 0, LORA_IQ_INVERSION_ON, 3000 );
+  
   SX1276SetChannel(frequency_table[random%LONGFI_NUM_UPLINK_CHANNELS] );
   SX1276Send(data, len);
 }
