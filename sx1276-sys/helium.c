@@ -104,7 +104,6 @@ void _send_random(uint8_t * data, size_t len){
   SX1276Send(data, len);
 }
 
-
 void helium_send(const uint8_t * data, size_t len){
   uint32_t num_fragments;
   size_t payload_consumed = 0;
@@ -158,7 +157,6 @@ void helium_send(const uint8_t * data, size_t len){
   LongFi.tx_len += num_bytes_copy;
   // initialize tx_cnt with current len, as first transmit will be this
   LongFi.tx_cnt = LongFi.tx_len;
-
 
   for(uint32_t cnt_fragments = 1; cnt_fragments < num_fragments; cnt_fragments++) {
     fragment_header_t fheader  = {

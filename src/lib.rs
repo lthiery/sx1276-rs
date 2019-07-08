@@ -59,7 +59,12 @@ impl LongFi{
 		unsafe {
 			sx1276_sys::helium_get_rx()
 		}
-		
+	}
+
+	pub fn get_random() -> u32 {
+		unsafe {
+			sx1276_sys::SX1276Random()
+		}
 	}
 }
 
