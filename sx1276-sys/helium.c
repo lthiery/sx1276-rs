@@ -98,7 +98,7 @@ size_t payload_bytes_in_subsequent_fragments(){
 }
 
 void helium_rf_test(){
-  uint8_t things[255];
+  uint8_t things[1];
   SX1276SetTxConfig( MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
                                  LORA_SPREADING_FACTOR, LORA_CODINGRATE,
                                  LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
@@ -108,14 +108,18 @@ void helium_rf_test(){
 }
 
 void _send_random(uint8_t * data, size_t len){
-  uint32_t random = SX1276Random()>>16;
-
+  uint32_t frequency; 
+  bool free_to_transmit = false;
+  while (!free_to_transmit){
+    uint32_t random = SX1276Random()>>16;
+    frequency = frequency_table[random%LONGFI_NUM_UPLINK_CHANNELS];
+    free_to_transmit = SX1276IsChannelFree(MODEM_LORA, frequency, -65);
+  }
   SX1276SetTxConfig( MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
-                                 LORA_SPREADING_FACTOR, LORA_CODINGRATE,
-                                 LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
-                                 true, 0, 0, LORA_IQ_INVERSION_ON, 3000 );
-
-  SX1276SetChannel(frequency_table[random%LONGFI_NUM_UPLINK_CHANNELS] );
+                               LORA_SPREADING_FACTOR, LORA_CODINGRATE,
+                               LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
+                               true, 0, 0, LORA_IQ_INVERSION_ON, 3000 );
+  SX1276SetChannel(frequency);
   SX1276Send(data, len);
 }
 
@@ -176,7 +180,7 @@ void helium_send(const uint8_t * data, size_t len){
   for(uint32_t cnt_fragments = 1; cnt_fragments < num_fragments; cnt_fragments++) {
     fragment_header_t fheader  = {
       .packet_id = packet_id,
-      .packet_num = cnt_fragments,
+      .fragment_num = cnt_fragments,
       .mac = 0xEFFE,
     };
     memcpy(&Buffer[LongFi.tx_len], &fheader, sizeof(fragment_header_t));

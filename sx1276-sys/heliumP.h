@@ -31,7 +31,7 @@ typedef enum {
 } LongFiSpreading_t;
 
 const uint32_t payload_per_fragment[NUM_SF] = {
-  32,32,32
+  24,24,24
 };
 
 const uint32_t fragments_per_channel[NUM_SF] = {
@@ -80,26 +80,29 @@ typedef struct {
 } LongFi_t;
 
 #pragma pack(push, 1)
+// if first byte is 0, is single fragment packet_header
 typedef struct {
-  uint32_t oui;
-  uint16_t device_id;
-  uint8_t packet_id;
-  uint16_t mac;
+  uint8_t packet_id;  // 0    must be zero
+  uint32_t oui;       // 1:4
+  uint16_t device_id; // 5:6
+  uint16_t mac;       // 7:8
 } packet_header_t;
 
+// if second byte is 0, is multi-fragment packet_header
 typedef struct {
-  uint32_t oui;
-  uint16_t device_id;
-  uint8_t packet_id;
-  uint8_t fragment_num;
-  uint8_t num_fragments;
-  uint16_t mac;
+  uint8_t packet_id;      // 0    must be non-zero
+  uint8_t fragment_num;   // 1    must be zero (byte)
+  uint8_t num_fragments;  // 2    must be non-zero
+  uint32_t oui;           // 3:6
+  uint16_t device_id;     // 7:8
+  uint16_t mac;           // 9:10
 } packet_header_multiple_fragments_t;
 
+// else (first and second byte, non-zero), is packet fragment
 typedef struct {
-  uint8_t packet_id;
-  uint8_t packet_num;
-  uint16_t mac;
+  uint8_t packet_id;        // 0    must be non-zero
+  uint8_t fragment_num;     // 1    must be non-zero
+  uint16_t mac;             // 2:3  
 } fragment_header_t;
 #pragma pack(pop)
 
