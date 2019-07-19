@@ -6,7 +6,7 @@
     { MODEM_FSK , REG_AFCFEI             , 0x01 },\
     { MODEM_FSK , REG_PREAMBLEDETECT     , 0xAA },\
     { MODEM_FSK , REG_OSC                , 0x07 },\
-    { MODEM_FSK , REG_SYNCCONFIG         , 0x16 },\
+    { MODEM_FSK , REG_SYNCCONFIG         , 0x12 },\
     { MODEM_FSK , REG_SYNCVALUE1         , 0xC1 },\
     { MODEM_FSK , REG_SYNCVALUE2         , 0x94 },\
     { MODEM_FSK , REG_SYNCVALUE3         , 0xC1 },\
