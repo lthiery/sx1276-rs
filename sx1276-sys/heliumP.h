@@ -23,7 +23,7 @@ const uint32_t frequency_table[LONGFI_NUM_UPLINK_CHANNELS] = {
   RADIO_2 + FREQ_SPACING*2
 };
 
-#define NUM_SF        (3)
+#define NUM_SF        (4)
 typedef enum {
   LongFi_SF7 = 0,
   LongFi_SF8 = 1,
