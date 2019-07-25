@@ -30,6 +30,9 @@ void helium_rf_init(struct RfConfig config) {
   LongFi.config = config;
 
   switch LORA_SPREADING_FACTOR {
+    case 10:
+    LongFi.spreading_factor = 3;
+    break;
     case 9:
     LongFi.spreading_factor = 2;
     break;

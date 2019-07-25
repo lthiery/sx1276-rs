@@ -28,14 +28,15 @@ typedef enum {
   LongFi_SF7 = 0,
   LongFi_SF8 = 1,
   LongFi_SF9 = 2,
+  LongFi_SF10 = 3,
 } LongFiSpreading_t;
 
 const uint32_t payload_per_fragment[NUM_SF] = {
-  24,24,24
+  24,24,24,24
 };
 
 const uint32_t fragments_per_channel[NUM_SF] = {
-  5, 2, 1
+  5, 2, 1, 1
 };
 
 #define TX_OUTPUT_POWER                             22        // dBm
@@ -44,7 +45,7 @@ const uint32_t fragments_per_channel[NUM_SF] = {
                                                               //  1: 250 kHz,
                                                               //  2: 500 kHz,
                                                               //  3: Reserved]
-#define LORA_SPREADING_FACTOR                       (9)         // [SF7..SF12]
+#define LORA_SPREADING_FACTOR                       (10)         // [SF7..SF12]
 #define LORA_CODINGRATE                             (1)         // [1: 4/5,
                                                               //  2: 4/6,
                                                               //  3: 4/7,
