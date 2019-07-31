@@ -1,6 +1,6 @@
 # sx1276-rs
 
-## Dependecies
+## Dependencies
 ### Rust Dependency
 This build requires the nightly toolchain in order to use: 
 ```
