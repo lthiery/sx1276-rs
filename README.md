@@ -13,7 +13,7 @@ rustup toolchain install nightly
 
 ### Dependencies to build sx1276-sys
 ```
-sudo apt-get install libclang-dev clang-8
+sudo apt-get install libclang-dev clang-8 libc6-dev-i386
 ```
 
 ## Build
